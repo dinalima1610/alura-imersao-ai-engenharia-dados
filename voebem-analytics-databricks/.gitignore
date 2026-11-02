@@ -1,0 +1,28 @@
+# Configurações e credenciais locais
+.env
+.env.*
+!.env.example
+.databrickscfg
+.databricks/
+*.pem
+*.key
+# Ambiente Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Arquivos do sistema e editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+# Dados brutos, exportações e resultados temporários
+/dados/
+/data/raw/
+*.zip
+**/saida/
+**/qa_shots/
+*.log
+# Manter os CSVs analíticos pequenos das execuções do Genie versionáveis.

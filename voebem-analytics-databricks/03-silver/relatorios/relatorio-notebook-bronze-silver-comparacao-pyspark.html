@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório One Page — Comparação Bronze vs Silver PySpark</title>
+<style>
+:root {
+  --bg: #0d1520;
+  --card: #152231;
+  --primary: #8dccf2;
+  --accent: #52aee8;
+  --accent-strong: #0b2f4a;
+  --accent-light: #183b55;
+  --text: #e7eef5;
+  --muted: #aab9c6;
+  --border: #30465a;
+  --code-bg: #0b131d;
+  --code-border: #334155;
+  --table-head: #145e8a;
+  --table-alt: #1a2a3b;
+  --highlight-bg: #102a45;
+  --highlight-border: #145e8a;
+  --success: #67d49a;
+  --warn: #f0a35b;
+  --shadow: 0 4px 18px rgba(0,0,0,.28); 
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --primary: #1a5276;
+  --accent: #2980b9;
+  --accent-strong: #1a5276;
+  --accent-light: #eaf4fb;
+  --text: #2c3e50;
+  --muted: #7f8c8d;
+  --border: #dee2e6;
+  --code-bg: #f4f6f8;
+  --code-border: #cbd5e0;
+  --table-head: #1a5276;
+  --table-alt: #f4f6f8;
+  --highlight-bg: #eaf4fb;
+  --highlight-border: #2980b9;
+  --success: #27ae60;
+  --warn: #e67e22;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  color-scheme: light;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+.hero {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: #fff;
+  padding: 62px 24px 48px;
+  text-align: center;
+}
+.hero h1 { font-size: 2.18rem; line-height:1.15; margin:0 auto 14px; letter-spacing:-.6px; max-width:900px; }
+.hero p { font-size: 1.05rem; max-width: 860px; margin: 0 auto; opacity: 0.94; }
+.hero .meta { margin-top: 18px; font-size: 0.86rem; opacity: 0.86; }
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(15,23,42,0.72);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+html[data-theme="light"] .theme-toggle { background: rgba(26,82,118,0.95); }
+.container { max-width: 1040px; margin: 0 auto; padding: 32px 24px; }
+section { margin-bottom: 40px; }
+.section-title {
+  font-size: 1.45rem;
+  color: var(--primary);
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .num {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.card, .toc {
+  background: var(--card);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  padding: 22px 26px;
+  margin-bottom:36px;
+}
+.card h3 { color: var(--primary); margin: 12px 0; font-size: 1.15rem; }
+.card h4 { color: var(--primary); margin: 12px 0 8px; font-size: 1rem; }
+.card p { margin-bottom: 10px; }
+.toc ol { columns: 2; column-gap: 42px; margin:0; padding-left:22px; }
+.toc li { margin: 8px 0; break-inside: avoid; }
+a { color: var(--accent); text-decoration: none; font-weight: 400; }
+a:hover { text-decoration: underline; }
+.badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.badge {
+  background: var(--accent-light);
+  color: var(--primary);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.86em;
+}
+p code, li code, td code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--primary);
+  border: 1px solid var(--code-border);
+}
+.table-wrap { overflow-x: auto; margin: 12px 0; border-radius: 8px; border: 1px solid var(--border); }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; min-width: 520px; }
+th { background: var(--table-head); color: #fff; padding: 9px 12px; text-align: left; white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tbody tr:nth-child(even) { background: var(--table-alt); }
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+.metric-box {
+  background: var(--card); 
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 19px;
+  text-align: center;
+  box-shadow:var(--shadow);
+}
+.metric-box .value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+.metric-box .label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+.highlight {
+  background: var(--highlight-bg);
+  border-left: 4px solid var(--highlight-border);
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 14px 0;
+}
+.note { color: var(--muted); font-size: 0.92rem; }
+.null { color: var(--warn); font-weight: 700; }
+.checklist { margin-left: 20px; }
+.checklist li { margin: 6px 0; }
+details {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+summary {
+  cursor: pointer;
+  color: var(--primary);
+  background: var(--accent-light);
+  padding: 12px 14px;
+  font-weight: 400;
+}
+details > *:not(summary) { margin-left: 14px; margin-right: 14px; }
+details .table-wrap { margin: 14px; }
+hr { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+footer {
+  background: #0b2f4a;
+  color: #dbeafe;
+  text-align: center;
+  padding: 26px 16px;
+  margin-top: 24px;
+}
+@media (max-width: 720px) {
+  .hero { padding: 76px 18px 38px; }
+  .hero h1 { font-size: 1.65rem; }
+  .container { padding: 24px 16px; }
+  .toc ul { columns: 1; }
+  .section-title { font-size: 1.22rem; align-items: flex-start; }
+  .theme-toggle { top: 10px; right: 10px; padding: 7px 11px; font-size: 0.84rem; }
+  .card, .toc { padding: 18px; }
+}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" type="button">🌕 Modo claro</button>
+<header class="hero">
+  <h1>Comparação Bronze vs Silver: o antes e o depois</h1>
+  <p>Análise de transformações PySpark em notebook Databricks, com foco em estrutura, tipos, padronização, amostras, contagens e métricas disponíveis.</p>
+  <div class="meta">Notebook de origem: <strong>Comparação Bronze vs Silver PySpark</strong> &middot; Linguagem: <strong>python</strong> &middot; Comandos: <strong>24</strong></div>
+</header>
+<main class="container">
+
+<section id="sumario">
+  <nav class="toc">
+    <h2>Sumário</h2>
+    <ol>
+      <li><a href="#objetivo">Objetivo</a></li><li><a href="#contexto">Contexto do Pipeline</a></li>
+      
+      <li><a href="#tabelas">Tabelas Validadas</a></li><li><a href="#codigo">Código Principal</a></li>
+      
+      <li><a href="#contagem">Contagem de Registros</a></li><li><a href="#esquema">Esquema das Tabelas</a></li>
+      
+      <li><a href="#amostras">Amostra de Dados</a></li><li><a href="#performance">Performance e Métricas</a></li>
+      
+      <li><a href="#conclusao">Conclusão</a></li>
+    </ol>
+  </nav>
+</section>
+
+<section id="objetivo">
+  <div class="section-title"><span class="num">1</span> Objetivo</div>
+  <div class="card">
+    <h2>Comparação Bronze vs Silver: Análise de Transformações</h2>
+<p>Este notebook compara as tabelas da camada Bronze (<code>voebem.bronze</code>) com suas versões transformadas na camada Silver (<code>voebem.silver</code>).</p>
+<p><strong>Objetivo:</strong> Entender quais mudanças foram aplicadas aos dados durante a transformação, incluindo:</p>
+<ul class="checklist">
+<li>Mudanças de tipos de dados</li>
+<li>Padronização de valores</li>
+<li>Colunas adicionadas ou renomeadas</li>
+<li>Qualidade dos dados antes e depois</li>
+</ul>
+<p><strong>Observação:</strong> Todas as consultas são <strong>somente leitura</strong> (SELECT apenas).</p>
+    <div class="highlight"><strong>Escopo do relatório:</strong> conversão visual do notebook exportado do Databricks, preservando comandos, explicações, resultados tabulares, métricas e conclusões sem alterar a origem.</div>
+  </div>
+</section>
+
+<section id="contexto">
+  <div class="section-title"><span class="num">2</span> Contexto do Pipeline</div>
+  <div class="card">
+    <p>O notebook compara a camada <strong>Bronze</strong> com a camada <strong>Silver</strong> do catálogo <code>voebem</code>, dentro de uma arquitetura medalhão.</p>
+    <div class="badges">
+      <span class="badge">Bronze: voebem.bronze</span>
+      <span class="badge">Silver: voebem.silver</span>
+      <span class="badge">PySpark / SQL</span>
+      <span class="badge">Consultas somente leitura</span>
+    </div>
+    <h3>1. Estrutura e Tipos de Dados</h3>
+<p>Comparação da estrutura das tabelas: número de linhas e tipos de dados das colunas.</p>
+    <h3>2. Padronização de Valores</h3>
+<p>Verifica como valores problemáticos foram tratados:</p>
+<ul class="checklist">
+<li>String <code>&#x27;null&#x27;</code> (texto) convertido para NULL real</li>
+<li>String <code>&#x27;N/A&#x27;</code> convertido para NULL</li>
+<li>Vírgula decimal substituída por ponto decimal</li>
+<li>Colunas renomeadas para maior clareza</li>
+</ul>
+    <h3>3. Registros Antes e Depois</h3>
+<p>Exemplos de registros das tabelas Bronze e Silver lado a lado para visualizar as transformações aplicadas.</p>
+  </div>
+</section>
+
+<section id="tabelas">
+  <div class="section-title"><span class="num">3</span> Tabelas Validadas</div>
+  <div class="card">
+    <p>As tabelas abaixo aparecem no resultado de contagem do notebook e formam o conjunto principal da comparação.</p>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>Tabela</th><th>Observação</th></tr></thead><tbody><tr><td>1</td><td><code>vra</code></td><td>Comparada entre Bronze e Silver</td></tr><tr><td>2</td><td><code>aerodromos</code></td><td>Comparada entre Bronze e Silver</td></tr><tr><td>3</td><td><code>codigos_operacao</code></td><td>Comparada entre Bronze e Silver</td></tr><tr><td>4</td><td><code>empresas (nac + est)</code></td><td>Comparada entre Bronze e Silver</td></tr></tbody></table></div>
+    <div class="highlight"><strong>Total comparado:</strong> 1016091 registros na Bronze e 1016091 registros na Silver, conforme outputs do notebook.</div>
+  </div>
+</section>
+
+<section id="codigo">
+  <div class="section-title"><span class="num">4</span> Código Principal</div>
+  <div class="card">
+    <p>Todos os comandos executáveis do notebook foram preservados abaixo. Por serem blocos extensos, ficam recolhidos por padrão.</p>
+    <details><summary>Exibir código completo: Contagem de linhas: Bronze vs Silver</summary><pre><code># Verifica se o número de linhas é mantido entre Bronze e Silver
+# Espera-se que a Silver não descarte linhas (mesma contagem)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT &#x27;vra&#x27; AS tabela,
+           (SELECT COUNT(*) FROM voebem.bronze.vra) AS bronze,
+           (SELECT COUNT(*) FROM voebem.silver.vra) AS silver,
+           (SELECT COUNT(*) FROM voebem.bronze.vra) - (SELECT COUNT(*) FROM voebem.silver.vra) AS diferenca
+    UNION ALL
+    SELECT &#x27;aerodromos&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.aerodromos),
+           (SELECT COUNT(*) FROM voebem.silver.aerodromos),
+           (SELECT COUNT(*) FROM voebem.bronze.aerodromos) - (SELECT COUNT(*) FROM voebem.silver.aerodromos)
+    UNION ALL
+    SELECT &#x27;codigos_operacao&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.codigos_operacao),
+           (SELECT COUNT(*) FROM voebem.silver.codigos_operacao),
+           (SELECT COUNT(*) FROM voebem.bronze.codigos_operacao) - (SELECT COUNT(*) FROM voebem.silver.codigos_operacao)
+    UNION ALL
+    SELECT &#x27;empresas (nac + est)&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.empresas_nacionais) + (SELECT COUNT(*) FROM voebem.bronze.empresas_estrangeiras),
+           (SELECT COUNT(*) FROM voebem.silver.empresas),
+           (SELECT COUNT(*) FROM voebem.bronze.empresas_nacionais) + (SELECT COUNT(*) FROM voebem.bronze.empresas_estrangeiras) - (SELECT COUNT(*) FROM voebem.silver.empresas)
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA: Comparação de tipos Bronze vs Silver</summary><pre><code># Compara os tipos de dados das colunas da tabela VRA
+# Bronze: todos os campos como STRING (regra da camada)
+# Silver: tipagem semântica (TIMESTAMP, DATE, INT, etc.)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;vra&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN s.column_name IS NULL THEN &#x27;REMOVIDA&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;vra&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;vra&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Aeródromos: Comparação de tipos Bronze vs Silver</summary><pre><code># Compara os tipos de dados das colunas da tabela Aerdromos
+# Identifica colunas renomeadas e novos tipos aplicados
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;aerodromos&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL AND s.column_name IS NOT NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN b.column_name IS NOT NULL AND s.column_name IS NULL THEN &#x27;RENOMEADA ou removida&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;aerodromos&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;aerodromos&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Códigos de Operação: Comparação de tipos</summary><pre><code># Compara os tipos de dados das colunas da tabela Códigos de Operação
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;codigos_operacao&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN s.column_name IS NULL THEN &#x27;REMOVIDA&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;codigos_operacao&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;codigos_operacao&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Empresas: Silver vs Bronze (nacionais + estrangeiras)</summary><pre><code># Compara a tabela Silver empresas (unificada) com as duas tabelas Bronze
+# A Silver une empresas_nacionais + empresas_estrangeiras em uma única tabela
+
+display(spark.sql(&quot;&quot;&quot;
+    WITH silver_cols AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;empresas&#x27;
+    ),
+    bronze_nac AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;empresas_nacionais&#x27;
+    ),
+    bronze_est AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;empresas_estrangeiras&#x27;
+    )
+    SELECT
+        &#x27;empresas&#x27; AS tabela,
+        s.column_name AS coluna_silver,
+        s.data_type AS tipo_silver,
+        bn.data_type AS tipo_bronze_nacionais,
+        be.data_type AS tipo_bronze_estrangeiras,
+        CASE
+            WHEN bn.column_name IS NULL AND be.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN bn.column_name IS NOT NULL AND be.column_name IS NULL THEN &#x27;só em nacionais&#x27;
+            WHEN bn.column_name IS NULL AND be.column_name IS NOT NULL THEN &#x27;só em estrangeiras&#x27;
+            ELSE &#x27;herdada de ambas&#x27;
+        END AS observacao
+    FROM silver_cols s
+    LEFT JOIN bronze_nac bn ON s.column_name = bn.column_name
+    LEFT JOIN bronze_est be ON s.column_name = be.column_name
+    ORDER BY s.column_name
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA: String &#x27;null&#x27; e &#x27;N/A&#x27; vs NULL real</summary><pre><code># Verifica quantas linhas têm valores problemáticos na Bronze
+# e como foram tratados na Silver
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;bronze.vra&#x27; AS tabela,
+        SUM(CASE WHEN partida_real = &#x27;null&#x27; THEN 1 ELSE 0 END) AS partida_real_str_null,
+        SUM(CASE WHEN partida_real IS NULL THEN 1 ELSE 0 END) AS partida_real_null_real,
+        SUM(CASE WHEN chegada_real = &#x27;null&#x27; THEN 1 ELSE 0 END) AS chegada_real_str_null,
+        SUM(CASE WHEN chegada_real IS NULL THEN 1 ELSE 0 END) AS chegada_real_null_real,
+        SUM(CASE WHEN codigo_justificativa = &#x27;N/A&#x27; THEN 1 ELSE 0 END) AS justificativa_str_NA,
+        COUNT(*) AS total_linhas
+    FROM voebem.bronze.vra
+    UNION ALL
+    SELECT
+        &#x27;silver.vra&#x27;,
+        0,
+        SUM(CASE WHEN partida_real IS NULL THEN 1 ELSE 0 END),
+        0,
+        SUM(CASE WHEN chegada_real IS NULL THEN 1 ELSE 0 END),
+        0,
+        COUNT(*)
+    FROM voebem.silver.vra
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Aeródromos: Vírgula decimal em altitude</summary><pre><code># Verifica como o campo altitude foi tratado
+# Bronze: string com vírgula decimal (formato brasileiro)
+# Silver: DOUBLE com ponto decimal (formato internacional)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        b.icao,
+        b.altitude AS altitude_bronze,
+        s.altitude_m AS altitude_silver,
+        CASE
+            WHEN b.altitude LIKE &#x27;%,%&#x27; THEN &#x27;vírgula -&gt; ponto decimal&#x27;
+            ELSE &#x27;sem vírgula&#x27;
+        END AS tratamento
+    FROM voebem.bronze.aerodromos b
+    JOIN voebem.silver.aerodromos s ON b.icao = s.icao
+    WHERE b.altitude IS NOT NULL AND b.altitude &lt;&gt; &#x27;&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Aerodromos: Colunas renomeadas</summary><pre><code># Mostra como as colunas foram renomeadas para maior clareza
+# Exemplo: &#x27;uf&#x27; -&gt; &#x27;uf_nome&#x27;, &#x27;latitude&#x27; -&gt; &#x27;latitude_dms&#x27;
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        b.icao,
+        b.uf AS uf_bronze,
+        s.uf_nome AS uf_silver,
+        b.latitude AS latitude_bronze,
+        s.latitude_dms AS latitude_silver,
+        b.longitude AS longitude_bronze,
+        s.longitude_dms AS longitude_silver
+    FROM voebem.bronze.aerodromos b
+    JOIN voebem.silver.aerodromos s ON b.icao = s.icao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA Bronze - Primeiros registros realizados</summary><pre><code># Mostra registros da tabela VRA na camada Bronze
+# Nota: partida_real e chegada_real são strings
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        icao_origem,
+        icao_destino,
+        partida_prevista,
+        partida_real,
+        chegada_prevista,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.bronze.vra
+    WHERE partida_real &lt;&gt; &#x27;null&#x27;
+      AND partida_prevista &lt;&gt; &#x27;null&#x27;
+      AND situacao_voo = &#x27;REALIZADO&#x27;
+    ORDER BY partida_prevista
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA Silver - Mesmos registros transformados</summary><pre><code># Mostra os mesmos registros na camada Silver
+# Nota: tipos corretos (TIMESTAMP), colunas derivadas (data/hora separadas, atrasos)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        icao_origem,
+        icao_destino,
+        partida_prevista,
+        partida_prevista_data,
+        partida_prevista_hora,
+        partida_real,
+        partida_real_data,
+        partida_real_hora,
+        chegada_prevista,
+        chegada_real,
+        atraso_partida_min,
+        atraso_chegada_min,
+        minutos_recuperados,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.silver.vra
+    WHERE partida_real IS NOT NULL
+      AND partida_prevista IS NOT NULL
+      AND situacao_voo = &#x27;REALIZADO&#x27;
+    ORDER BY partida_prevista
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA Bronze - Voos cancelados (string &#x27;null&#x27;)</summary><pre><code># Mostra voos cancelados na Bronze
+# Nota: partida_real = &#x27;null&#x27; (string, não NULL real)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        partida_prevista,
+        partida_real,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.bronze.vra
+    WHERE partida_real = &#x27;null&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: VRA Silver - Voos cancelados (NULL real)</summary><pre><code># Mostra voos cancelados na Silver
+# Nota: partida_real IS NULL (valor nulo real, funciona com IS NULL)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        partida_prevista,
+        partida_real,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.silver.vra
+    WHERE partida_real IS NULL
+      AND situacao_voo = &#x27;CANCELADO&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Aeródromos Bronze - Primeiros registros</summary><pre><code># Aerodromos na camada Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.aerodromos
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Aeródromos Silver - Registros transformados</summary><pre><code># Aerodromos na camada Silver (tipos corretos, colunas renomeadas)
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.aerodromos
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Empresas Bronze - Nacionais</summary><pre><code># Empresas Nacionais na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.empresas_nacionais
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Empresas Bronze - Estrangeiras</summary><pre><code># Empresas Estrangeiras na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.empresas_estrangeiras
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Empresas Silver - Tabela unificada</summary><pre><code># Empresas na Silver (união de nacionais + estrangeiras, com coluna origem_cadastro)
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.empresas
+    LIMIT 10
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Códigos de Operação Bronze</summary><pre><code># Códigos de Operação na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.codigos_operacao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+<details><summary>Exibir código completo: Códigos de Operação Silver</summary><pre><code># Códigos de Operação na Silver
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.codigos_operacao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details>
+  </div>
+</section>
+
+<section id="contagem">
+  <div class="section-title"><span class="num">5</span> Contagem de Registros</div>
+  <div class="card">
+    <p>Comparação de volume entre Bronze e Silver. A diferença registrada é zero para todas as tabelas exibidas.</p>
+    <div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>bronze</th><th>silver</th><th>diferenca</th></tr></thead>
+<tbody>
+<tr><td>vra</td><td>1014705</td><td>1014705</td><td>0</td></tr>
+<tr><td>aerodromos</td><td>496</td><td>496</td><td>0</td></tr>
+<tr><td>codigos_operacao</td><td>13</td><td>13</td><td>0</td></tr>
+<tr><td>empresas (nac + est)</td><td>877</td><td>877</td><td>0</td></tr>
+</tbody></table></div>
+    <div class="highlight"><strong>Leitura:</strong> a transformação para Silver manteve a quantidade de linhas: nenhuma perda de registros aparece na contagem apresentada.</div>
+    <details><summary>Exibir código completo: Contagem de linhas: Bronze vs Silver</summary><pre><code># Verifica se o número de linhas é mantido entre Bronze e Silver
+# Espera-se que a Silver não descarte linhas (mesma contagem)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT &#x27;vra&#x27; AS tabela,
+           (SELECT COUNT(*) FROM voebem.bronze.vra) AS bronze,
+           (SELECT COUNT(*) FROM voebem.silver.vra) AS silver,
+           (SELECT COUNT(*) FROM voebem.bronze.vra) - (SELECT COUNT(*) FROM voebem.silver.vra) AS diferenca
+    UNION ALL
+    SELECT &#x27;aerodromos&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.aerodromos),
+           (SELECT COUNT(*) FROM voebem.silver.aerodromos),
+           (SELECT COUNT(*) FROM voebem.bronze.aerodromos) - (SELECT COUNT(*) FROM voebem.silver.aerodromos)
+    UNION ALL
+    SELECT &#x27;codigos_operacao&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.codigos_operacao),
+           (SELECT COUNT(*) FROM voebem.silver.codigos_operacao),
+           (SELECT COUNT(*) FROM voebem.bronze.codigos_operacao) - (SELECT COUNT(*) FROM voebem.silver.codigos_operacao)
+    UNION ALL
+    SELECT &#x27;empresas (nac + est)&#x27;,
+           (SELECT COUNT(*) FROM voebem.bronze.empresas_nacionais) + (SELECT COUNT(*) FROM voebem.bronze.empresas_estrangeiras),
+           (SELECT COUNT(*) FROM voebem.silver.empresas),
+           (SELECT COUNT(*) FROM voebem.bronze.empresas_nacionais) + (SELECT COUNT(*) FROM voebem.bronze.empresas_estrangeiras) - (SELECT COUNT(*) FROM voebem.silver.empresas)
+&quot;&quot;&quot;))</code></pre></details>
+  </div>
+</section>
+
+<section id="esquema">
+  <div class="section-title"><span class="num">6</span> Esquema das Tabelas</div>
+  <div class="card">
+    <p>Comparações de colunas, tipos e observações de transformação entre Bronze e Silver.</p>
+    <h3>VRA: Comparação de tipos Bronze vs Silver</h3><div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>coluna</th><th>tipo_bronze</th><th>tipo_silver</th><th>observacao</th></tr></thead>
+<tbody>
+<tr><td>vra</td><td>_arquivo_origem</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>_ingerido_em</td><td>TIMESTAMP</td><td>TIMESTAMP</td><td>igual</td></tr>
+<tr><td>vra</td><td>chegada_prevista</td><td>STRING</td><td>TIMESTAMP</td><td>TIPO MUDOU: STRING -&gt; TIMESTAMP</td></tr>
+<tr><td>vra</td><td>chegada_real</td><td>STRING</td><td>TIMESTAMP</td><td>TIPO MUDOU: STRING -&gt; TIMESTAMP</td></tr>
+<tr><td>vra</td><td>codigo_di</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>codigo_justificativa</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>codigo_tipo_linha</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>icao_destino</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>icao_empresa</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>icao_origem</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>numero_voo</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>partida_prevista</td><td>STRING</td><td>TIMESTAMP</td><td>TIPO MUDOU: STRING -&gt; TIMESTAMP</td></tr>
+<tr><td>vra</td><td>partida_real</td><td>STRING</td><td>TIMESTAMP</td><td>TIPO MUDOU: STRING -&gt; TIMESTAMP</td></tr>
+<tr><td>vra</td><td>situacao_voo</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>vra</td><td>_transformado_em</td><td><span class="null">NULL</span></td><td>TIMESTAMP</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>atraso_chegada_min</td><td><span class="null">NULL</span></td><td>INT</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>atraso_partida_min</td><td><span class="null">NULL</span></td><td>INT</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>chegada_prevista_data</td><td><span class="null">NULL</span></td><td>DATE</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>chegada_prevista_hora</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>chegada_real_data</td><td><span class="null">NULL</span></td><td>DATE</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>chegada_real_hora</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>minutos_recuperados</td><td><span class="null">NULL</span></td><td>INT</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>partida_prevista_data</td><td><span class="null">NULL</span></td><td>DATE</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>partida_prevista_hora</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>partida_real_data</td><td><span class="null">NULL</span></td><td>DATE</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>vra</td><td>partida_real_hora</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>tabela</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>coluna</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>tipo_bronze</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>tipo_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>observacao</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA: Comparação de tipos Bronze vs Silver</summary><pre><code># Compara os tipos de dados das colunas da tabela VRA
+# Bronze: todos os campos como STRING (regra da camada)
+# Silver: tipagem semântica (TIMESTAMP, DATE, INT, etc.)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;vra&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN s.column_name IS NULL THEN &#x27;REMOVIDA&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;vra&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;vra&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details><h3>Aerodromos: Comparação de tipos Bronze vs Silver</h3><div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>coluna</th><th>tipo_bronze</th><th>tipo_silver</th><th>observacao</th></tr></thead>
+<tbody>
+<tr><td>aerodromos</td><td>_ingerido_em</td><td>TIMESTAMP</td><td>TIMESTAMP</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>altitude</td><td>STRING</td><td><span class="null">NULL</span></td><td>RENOMEADA ou removida</td></tr>
+<tr><td>aerodromos</td><td>ciad</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>icao</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>latitude</td><td>STRING</td><td><span class="null">NULL</span></td><td>RENOMEADA ou removida</td></tr>
+<tr><td>aerodromos</td><td>longitude</td><td>STRING</td><td><span class="null">NULL</span></td><td>RENOMEADA ou removida</td></tr>
+<tr><td>aerodromos</td><td>municipio</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>municipio_servido</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>nome</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>situacao</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>aerodromos</td><td>uf</td><td>STRING</td><td><span class="null">NULL</span></td><td>RENOMEADA ou removida</td></tr>
+<tr><td>aerodromos</td><td>uf_servido</td><td>STRING</td><td><span class="null">NULL</span></td><td>RENOMEADA ou removida</td></tr>
+<tr><td>aerodromos</td><td>_transformado_em</td><td><span class="null">NULL</span></td><td>TIMESTAMP</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>aerodromos</td><td>altitude_m</td><td><span class="null">NULL</span></td><td>DOUBLE</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>aerodromos</td><td>latitude_dms</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>aerodromos</td><td>longitude_dms</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>aerodromos</td><td>uf_nome</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+<tr><td>aerodromos</td><td>uf_servido_nome</td><td><span class="null">NULL</span></td><td>STRING</td><td>NOVA (criada na silver)</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>tabela</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>coluna</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>tipo_bronze</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>tipo_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>observacao</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Aeródromos: Comparação de tipos Bronze vs Silver</summary><pre><code># Compara os tipos de dados das colunas da tabela Aerodromos
+# Identifica colunas renomeadas e novos tipos aplicados
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;aerodromos&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL AND s.column_name IS NOT NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN b.column_name IS NOT NULL AND s.column_name IS NULL THEN &#x27;RENOMEADA ou removida&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;aerodromos&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;aerodromos&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details><h3>Códigos de Operação: Comparação de tipos</h3><div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>coluna</th><th>tipo_bronze</th><th>tipo_silver</th><th>observacao</th></tr></thead>
+<tbody>
+<tr><td>codigos_operacao</td><td>codigo</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>codigos_operacao</td><td>descricao</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>codigos_operacao</td><td>dominio</td><td>STRING</td><td>STRING</td><td>igual</td></tr>
+<tr><td>codigos_operacao</td><td>_transformado_em</td><td><span class="null">NULL</span></td><td>TIMESTAMP</td><td>NOVA (criada na silver)</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>tabela</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>coluna</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>tipo_bronze</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>tipo_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>observacao</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Códigos de Operação: Comparação de tipos</summary><pre><code># Compara os tipos de dados das colunas da tabela Códigos de Operação
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;codigos_operacao&#x27; AS tabela,
+        COALESCE(b.column_name, s.column_name) AS coluna,
+        b.data_type AS tipo_bronze,
+        s.data_type AS tipo_silver,
+        CASE
+            WHEN b.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN s.column_name IS NULL THEN &#x27;REMOVIDA&#x27;
+            WHEN b.data_type &lt;&gt; s.data_type THEN CONCAT(&#x27;TIPO MUDOU: &#x27;, b.data_type, &#x27; -&gt; &#x27;, s.data_type)
+            ELSE &#x27;igual&#x27;
+        END AS observacao
+    FROM (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;codigos_operacao&#x27;
+    ) b
+    FULL OUTER JOIN (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;codigos_operacao&#x27;
+    ) s ON b.column_name = s.column_name
+    ORDER BY
+        CASE WHEN b.column_name IS NULL THEN 1 ELSE 0 END,
+        COALESCE(b.column_name, s.column_name)
+&quot;&quot;&quot;))</code></pre></details><h3>Empresas: Silver vs Bronze (nacionais + estrangeiras)</h3><div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>coluna_silver</th><th>tipo_silver</th><th>tipo_bronze_nacionais</th><th>tipo_bronze_estrangeiras</th><th>observacao</th></tr></thead>
+<tbody>
+<tr><td>empresas</td><td>_arquivo_origem</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>_ingerido_em</td><td>TIMESTAMP</td><td>TIMESTAMP</td><td>TIMESTAMP</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>_transformado_em</td><td>TIMESTAMP</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>NOVA (criada na silver)</td></tr>
+<tr><td>empresas</td><td>cidade</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>icao</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>origem_cadastro</td><td>STRING</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>NOVA (criada na silver)</td></tr>
+<tr><td>empresas</td><td>razao_social</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>servico</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>sigla_iata</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>situacao</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+<tr><td>empresas</td><td>uf</td><td>STRING</td><td>STRING</td><td>STRING</td><td>herdada de ambas</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>tabela</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>coluna_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Name of the column.&quot;}</td></tr>
+<tr><td><code>tipo_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>tipo_bronze_nacionais</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>tipo_bronze_estrangeiras</code></td><td>string</td><td>{&quot;comment&quot;: &quot;The simple data type name of the column, or STRUCT, or ARRAY.&quot;}</td></tr>
+<tr><td><code>observacao</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Empresas: Silver vs Bronze (nacionais + estrangeiras)</summary><pre><code># Compara a tabela Silver empresas (unificada) com as duas tabelas Bronze
+# A Silver une empresas_nacionais + empresas_estrangeiras em uma única tabela
+
+display(spark.sql(&quot;&quot;&quot;
+    WITH silver_cols AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;silver&#x27; AND table_name = &#x27;empresas&#x27;
+    ),
+    bronze_nac AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;empresas_nacionais&#x27;
+    ),
+    bronze_est AS (
+        SELECT column_name, data_type
+        FROM voebem.information_schema.columns
+        WHERE table_schema = &#x27;bronze&#x27; AND table_name = &#x27;empresas_estrangeiras&#x27;
+    )
+    SELECT
+        &#x27;empresas&#x27; AS tabela,
+        s.column_name AS coluna_silver,
+        s.data_type AS tipo_silver,
+        bn.data_type AS tipo_bronze_nacionais,
+        be.data_type AS tipo_bronze_estrangeiras,
+        CASE
+            WHEN bn.column_name IS NULL AND be.column_name IS NULL THEN &#x27;NOVA (criada na silver)&#x27;
+            WHEN bn.column_name IS NOT NULL AND be.column_name IS NULL THEN &#x27;só em nacionais&#x27;
+            WHEN bn.column_name IS NULL AND be.column_name IS NOT NULL THEN &#x27;só em estrangeiras&#x27;
+            ELSE &#x27;herdada de ambas&#x27;
+        END AS observacao
+    FROM silver_cols s
+    LEFT JOIN bronze_nac bn ON s.column_name = bn.column_name
+    LEFT JOIN bronze_est be ON s.column_name = be.column_name
+    ORDER BY s.column_name
+&quot;&quot;&quot;))</code></pre></details>
+  </div>
+</section>
+
+<section id="amostras">
+  <div class="section-title"><span class="num">7</span> Amostra de Dados</div>
+  <div class="card">
+    <p>Amostras e verificações antes/depois foram agrupadas em blocos expansíveis para manter a leitura da One Page mais objetiva.</p>
+    <details><summary>Exibir amostra de dados: VRA: String &#x27;null&#x27; e &#x27;N/A&#x27; vs NULL real</summary><div class="table-wrap"><table>
+<thead><tr><th>tabela</th><th>partida_real_str_null</th><th>partida_real_null_real</th><th>chegada_real_str_null</th><th>chegada_real_null_real</th><th>justificativa_str_NA</th><th>total_linhas</th></tr></thead>
+<tbody>
+<tr><td>bronze.vra</td><td>29145</td><td>0</td><td>29145</td><td>0</td><td>1014705</td><td>1014705</td></tr>
+<tr><td>silver.vra</td><td>0</td><td>29145</td><td>0</td><td>29145</td><td>0</td><td>1014705</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>tabela</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>partida_real_str_null</code></td><td>long</td><td>{}</td></tr>
+<tr><td><code>partida_real_null_real</code></td><td>long</td><td>{}</td></tr>
+<tr><td><code>chegada_real_str_null</code></td><td>long</td><td>{}</td></tr>
+<tr><td><code>chegada_real_null_real</code></td><td>long</td><td>{}</td></tr>
+<tr><td><code>justificativa_str_NA</code></td><td>long</td><td>{}</td></tr>
+<tr><td><code>total_linhas</code></td><td>long</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA: String &#x27;null&#x27; e &#x27;N/A&#x27; vs NULL real</summary><pre><code># Verifica quantas linhas têm valores problemáticos na Bronze
+# e como foram tratados na Silver
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        &#x27;bronze.vra&#x27; AS tabela,
+        SUM(CASE WHEN partida_real = &#x27;null&#x27; THEN 1 ELSE 0 END) AS partida_real_str_null,
+        SUM(CASE WHEN partida_real IS NULL THEN 1 ELSE 0 END) AS partida_real_null_real,
+        SUM(CASE WHEN chegada_real = &#x27;null&#x27; THEN 1 ELSE 0 END) AS chegada_real_str_null,
+        SUM(CASE WHEN chegada_real IS NULL THEN 1 ELSE 0 END) AS chegada_real_null_real,
+        SUM(CASE WHEN codigo_justificativa = &#x27;N/A&#x27; THEN 1 ELSE 0 END) AS justificativa_str_NA,
+        COUNT(*) AS total_linhas
+    FROM voebem.bronze.vra
+    UNION ALL
+    SELECT
+        &#x27;silver.vra&#x27;,
+        0,
+        SUM(CASE WHEN partida_real IS NULL THEN 1 ELSE 0 END),
+        0,
+        SUM(CASE WHEN chegada_real IS NULL THEN 1 ELSE 0 END),
+        0,
+        COUNT(*)
+    FROM voebem.silver.vra
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Aeródromos: Vírgula decimal em altitude</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>altitude_bronze</th><th>altitude_silver</th><th>tratamento</th></tr></thead>
+<tbody>
+<tr><td>SBRB</td><td>193,0</td><td>193.0</td><td>vírgula -&gt; ponto decimal</td></tr>
+<tr><td>SWPI</td><td>25,0</td><td>25.0</td><td>vírgula -&gt; ponto decimal</td></tr>
+<tr><td>SBMQ</td><td>17,0</td><td>17.0</td><td>vírgula -&gt; ponto decimal</td></tr>
+<tr><td>SBVC</td><td>894,0</td><td>894.0</td><td>vírgula -&gt; ponto decimal</td></tr>
+<tr><td>SBLE</td><td>506,0</td><td>506.0</td><td>vírgula -&gt; ponto decimal</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>altitude_bronze</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>altitude_silver</code></td><td>double</td><td>{&quot;comment&quot;: &quot;Altitude do aerodromo em metros. Na origem vem com vírgula decimal.&quot;}</td></tr>
+<tr><td><code>tratamento</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Aeródromos: Vírgula decimal em altitude</summary><pre><code># Verifica como o campo altitude foi tratado
+# Bronze: string com vírgula decimal (formato brasileiro)
+# Silver: DOUBLE com ponto decimal (formato internacional)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        b.icao,
+        b.altitude AS altitude_bronze,
+        s.altitude_m AS altitude_silver,
+        CASE
+            WHEN b.altitude LIKE &#x27;%,%&#x27; THEN &#x27;vírgula -&gt; ponto decimal&#x27;
+            ELSE &#x27;sem vírgula&#x27;
+        END AS tratamento
+    FROM voebem.bronze.aerodromos b
+    JOIN voebem.silver.aerodromos s ON b.icao = s.icao
+    WHERE b.altitude IS NOT NULL AND b.altitude &lt;&gt; &#x27;&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Aeródromos: Colunas renomeadas</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>uf_bronze</th><th>uf_silver</th><th>latitude_bronze</th><th>latitude_silver</th><th>longitude_bronze</th><th>longitude_silver</th></tr></thead>
+<tbody>
+<tr><td>SBRB</td><td>Acre</td><td>Acre</td><td>09°52&#x27;06&quot;S</td><td>09°52&#x27;06&quot;S</td><td>067°53&#x27;53&quot;W</td><td>067°53&#x27;53&quot;W</td></tr>
+<tr><td>SWPI</td><td>Amazonas</td><td>Amazonas</td><td>02°40&#x27;25&quot;S</td><td>02°40&#x27;25&quot;S</td><td>056°46&#x27;39&quot;W</td><td>056°46&#x27;39&quot;W</td></tr>
+<tr><td>SBMQ</td><td>Amapá</td><td>Amapá</td><td>00°03&#x27;02&quot;N</td><td>00°03&#x27;02&quot;N</td><td>051°04&#x27;20&quot;W</td><td>051°04&#x27;20&quot;W</td></tr>
+<tr><td>SBVC</td><td>Bahia</td><td>Bahia</td><td>14°54&#x27;28&quot;S</td><td>14°54&#x27;28&quot;S</td><td>040°54&#x27;53&quot;W</td><td>040°54&#x27;53&quot;W</td></tr>
+<tr><td>SBLE</td><td>Bahia</td><td>Bahia</td><td>12°28&#x27;56&quot;S</td><td>12°28&#x27;56&quot;S</td><td>041°16&#x27;37&quot;W</td><td>041°16&#x27;37&quot;W</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf_bronze</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Nome da unidade federativa POR EXTENSO (Acre, Sao Paulo), nao a sigla: e assim que a ANAC publica.&quot;}</td></tr>
+<tr><td><code>latitude_bronze</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>latitude_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Latitude em graus, minutos e segundos, como publicada pela ANAC.&quot;}</td></tr>
+<tr><td><code>longitude_bronze</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>longitude_silver</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Longitude em graus, minutos e segundos, como publicada pela ANAC.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Aeródromos: Colunas renomeadas</summary><pre><code># Mostra como as colunas foram renomeadas para maior clareza
+# Exemplo: &#x27;uf&#x27; -&gt; &#x27;uf_nome&#x27;, &#x27;latitude&#x27; -&gt; &#x27;latitude_dms&#x27;
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        b.icao,
+        b.uf AS uf_bronze,
+        s.uf_nome AS uf_silver,
+        b.latitude AS latitude_bronze,
+        s.latitude_dms AS latitude_silver,
+        b.longitude AS longitude_bronze,
+        s.longitude_dms AS longitude_silver
+    FROM voebem.bronze.aerodromos b
+    JOIN voebem.silver.aerodromos s ON b.icao = s.icao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: VRA Bronze - Primeiros registros realizados</summary><div class="table-wrap"><table>
+<thead><tr><th>icao_empresa</th><th>numero_voo</th><th>icao_origem</th><th>icao_destino</th><th>partida_prevista</th><th>partida_real</th><th>chegada_prevista</th><th>chegada_real</th><th>situacao_voo</th><th>codigo_justificativa</th></tr></thead>
+<tbody>
+<tr><td>GLO</td><td>9629</td><td>SBEG</td><td>SBGR</td><td>2025-08-01 00:00:00</td><td>2025-08-01 01:17:00</td><td>2025-08-01 04:00:00</td><td>2025-08-01 04:48:00</td><td>REALIZADO</td><td>N/A</td></tr>
+<tr><td>AVA</td><td>0261</td><td>SKBO</td><td>SBGL</td><td>2025-08-01 00:05:00</td><td>2025-08-01 00:19:00</td><td>2025-08-01 06:20:00</td><td>2025-08-01 06:13:00</td><td>REALIZADO</td><td>N/A</td></tr>
+<tr><td>TAM</td><td>4698</td><td>SBGR</td><td>SBFL</td><td>2025-08-01 00:05:00</td><td>2025-08-01 00:19:00</td><td>2025-08-01 01:20:00</td><td>2025-08-01 01:24:00</td><td>REALIZADO</td><td>N/A</td></tr>
+<tr><td>TAM</td><td>4682</td><td>SBGR</td><td>SBGL</td><td>2025-08-01 00:05:00</td><td>2025-08-01 00:43:00</td><td>2025-08-01 01:05:00</td><td>2025-08-01 01:34:00</td><td>REALIZADO</td><td>N/A</td></tr>
+<tr><td>AAL</td><td>0905</td><td>KMIA</td><td>SBGL</td><td>2025-08-01 00:05:00.100000000</td><td>2025-07-31 23:58:00</td><td>2025-08-01 08:20:00.100000000</td><td>2025-08-01 08:10:00</td><td>REALIZADO</td><td>N/A</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao_empresa</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>numero_voo</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>icao_origem</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>icao_destino</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>partida_prevista</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>partida_real</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>chegada_prevista</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>chegada_real</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>situacao_voo</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>codigo_justificativa</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA Bronze - Primeiros registros realizados</summary><pre><code># Mostra registros da tabela VRA na camada Bronze
+# Nota: partida_real e chegada_real são strings
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        icao_origem,
+        icao_destino,
+        partida_prevista,
+        partida_real,
+        chegada_prevista,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.bronze.vra
+    WHERE partida_real &lt;&gt; &#x27;null&#x27;
+      AND partida_prevista &lt;&gt; &#x27;null&#x27;
+      AND situacao_voo = &#x27;REALIZADO&#x27;
+    ORDER BY partida_prevista
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: VRA Silver - Mesmos registros transformados</summary><div class="table-wrap"><table>
+<thead><tr><th>icao_empresa</th><th>numero_voo</th><th>icao_origem</th><th>icao_destino</th><th>partida_prevista</th><th>partida_prevista_data</th><th>partida_prevista_hora</th><th>partida_real</th><th>partida_real_data</th><th>partida_real_hora</th><th>chegada_prevista</th><th>chegada_real</th><th>atraso_partida_min</th><th>atraso_chegada_min</th><th>minutos_recuperados</th><th>situacao_voo</th><th>codigo_justificativa</th></tr></thead>
+<tbody>
+<tr><td>GLO</td><td>9629</td><td>SBEG</td><td>SBGR</td><td>2025-08-01T00:00:00.000Z</td><td>2025-08-01</td><td>00:00</td><td>2025-08-01T01:17:00.000Z</td><td>2025-08-01</td><td>01:17</td><td>2025-08-01T04:00:00.000Z</td><td>2025-08-01T04:48:00.000Z</td><td>77</td><td>48</td><td>29</td><td>REALIZADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>AVA</td><td>0261</td><td>SKBO</td><td>SBGL</td><td>2025-08-01T00:05:00.000Z</td><td>2025-08-01</td><td>00:05</td><td>2025-08-01T00:19:00.000Z</td><td>2025-08-01</td><td>00:19</td><td>2025-08-01T06:20:00.000Z</td><td>2025-08-01T06:13:00.000Z</td><td>14</td><td>-7</td><td>21</td><td>REALIZADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>TAM</td><td>4698</td><td>SBGR</td><td>SBFL</td><td>2025-08-01T00:05:00.000Z</td><td>2025-08-01</td><td>00:05</td><td>2025-08-01T00:19:00.000Z</td><td>2025-08-01</td><td>00:19</td><td>2025-08-01T01:20:00.000Z</td><td>2025-08-01T01:24:00.000Z</td><td>14</td><td>4</td><td>10</td><td>REALIZADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>TAM</td><td>4682</td><td>SBGR</td><td>SBGL</td><td>2025-08-01T00:05:00.000Z</td><td>2025-08-01</td><td>00:05</td><td>2025-08-01T00:43:00.000Z</td><td>2025-08-01</td><td>00:43</td><td>2025-08-01T01:05:00.000Z</td><td>2025-08-01T01:34:00.000Z</td><td>38</td><td>29</td><td>9</td><td>REALIZADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>AAL</td><td>0905</td><td>KMIA</td><td>SBGL</td><td>2025-08-01T00:05:00.100Z</td><td>2025-08-01</td><td>00:05</td><td>2025-07-31T23:58:00.000Z</td><td>2025-07-31</td><td>23:58</td><td>2025-08-01T08:20:00.100Z</td><td>2025-08-01T08:10:00.000Z</td><td>-7</td><td>-10</td><td>3</td><td>REALIZADO</td><td><span class="null">NULL</span></td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao_empresa</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO de tres letras da empresa aerea que operou a etapa. Chave para silver.empresas.&quot;}</td></tr>
+<tr><td><code>numero_voo</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Numero do voo divulgado pela companhia. Identificador comercial, nao numerico: pode ter zero a esquerda e se repete entre datas.&quot;}</td></tr>
+<tr><td><code>icao_origem</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO do aerodromo de onde a etapa partiu. Chave para silver.aerodromos - aeroportos estrangeiros nao constam no cadastro da ANAC.&quot;}</td></tr>
+<tr><td><code>icao_destino</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO do aerodromo onde a etapa pousou. Mesma observacao de cobertura da origem.&quot;}</td></tr>
+<tr><td><code>partida_prevista</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario de partida programado pela companhia, na hora local do aeroporto de origem.&quot;}</td></tr>
+<tr><td><code>partida_prevista_data</code></td><td>date</td><td>{&quot;comment&quot;: &quot;Data da partida programada, separada para facilitar analise por dia.&quot;}</td></tr>
+<tr><td><code>partida_prevista_hora</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Hora e minuto da partida programada (HH:mm), separada para analise por faixa horaria.&quot;}</td></tr>
+<tr><td><code>partida_real</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario em que a aeronave efetivamente saiu. Nulo em voo cancelado, que nao chegou a partir.&quot;}</td></tr>
+<tr><td><code>partida_real_data</code></td><td>date</td><td>{&quot;comment&quot;: &quot;Data da partida efetiva.&quot;}</td></tr>
+<tr><td><code>partida_real_hora</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Hora e minuto da partida efetiva (HH:mm).&quot;}</td></tr>
+<tr><td><code>chegada_prevista</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario de chegada programado, na hora local do aeroporto de destino.&quot;}</td></tr>
+<tr><td><code>chegada_real</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario em que a aeronave efetivamente pousou. Nulo em voo cancelado.&quot;}</td></tr>
+<tr><td><code>atraso_partida_min</code></td><td>integer</td><td>{&quot;comment&quot;: &quot;Minutos entre a partida programada e a partida efetiva. Positivo e atraso, negativo e antecipacao. Aritmetica pura: nao aplica limiar de pontualidade.&quot;}</td></tr>
+<tr><td><code>atraso_chegada_min</code></td><td>integer</td><td>{&quot;comment&quot;: &quot;Minutos entre a chegada programada e a chegada efetiva. Positivo e atraso, negativo e antecipacao.&quot;}</td></tr>
+<tr><td><code>minutos_recuperados</code></td><td>integer</td><td>{&quot;comment&quot;: &quot;Minutos que a etapa recuperou em voo: atraso de partida menos atraso de chegada. Positivo significa que chegou menos atrasada do que saiu.&quot;}</td></tr>
+<tr><td><code>situacao_voo</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Situacao informada pela companhia: REALIZADO quando a etapa aconteceu, CANCELADO quando nao.&quot;}</td></tr>
+<tr><td><code>codigo_justificativa</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Motivo declarado do atraso. Deixou de ser exigido pela ANAC em abril de 2020 com a revogacao da IAC 1504: vem vazio em toda a janela deste projeto.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA Silver - Mesmos registros transformados</summary><pre><code># Mostra os mesmos registros na camada Silver
+# Nota: tipos corretos (TIMESTAMP), colunas derivadas (data/hora separadas, atrasos)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        icao_origem,
+        icao_destino,
+        partida_prevista,
+        partida_prevista_data,
+        partida_prevista_hora,
+        partida_real,
+        partida_real_data,
+        partida_real_hora,
+        chegada_prevista,
+        chegada_real,
+        atraso_partida_min,
+        atraso_chegada_min,
+        minutos_recuperados,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.silver.vra
+    WHERE partida_real IS NOT NULL
+      AND partida_prevista IS NOT NULL
+      AND situacao_voo = &#x27;REALIZADO&#x27;
+    ORDER BY partida_prevista
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: VRA Bronze - Voos cancelados (string &#x27;null&#x27;)</summary><div class="table-wrap"><table>
+<thead><tr><th>icao_empresa</th><th>numero_voo</th><th>partida_prevista</th><th>partida_real</th><th>chegada_real</th><th>situacao_voo</th><th>codigo_justificativa</th></tr></thead>
+<tbody>
+<tr><td>ETH</td><td>3500</td><td>2026-01-27 17:15:00.100000000</td><td>null</td><td>null</td><td>CANCELADO</td><td>N/A</td></tr>
+<tr><td>AZU</td><td>4036</td><td>2026-01-27 19:45:00</td><td>null</td><td>null</td><td>CANCELADO</td><td>N/A</td></tr>
+<tr><td>GLO</td><td>1653</td><td>2026-01-25 15:35:00</td><td>null</td><td>null</td><td>CANCELADO</td><td>N/A</td></tr>
+<tr><td>LPE</td><td>2429</td><td>2026-01-25 12:40:00</td><td>null</td><td>null</td><td>CANCELADO</td><td>N/A</td></tr>
+<tr><td>LPE</td><td>2429</td><td>2026-01-08 16:30:00</td><td>null</td><td>null</td><td>CANCELADO</td><td>N/A</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao_empresa</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>numero_voo</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>partida_prevista</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>partida_real</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>chegada_real</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>situacao_voo</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>codigo_justificativa</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA Bronze - Voos cancelados (string &#x27;null&#x27;)</summary><pre><code># Mostra voos cancelados na Bronze
+# Nota: partida_real = &#x27;null&#x27; (string, não NULL real)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        partida_prevista,
+        partida_real,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.bronze.vra
+    WHERE partida_real = &#x27;null&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: VRA Silver - Voos cancelados (NULL real)</summary><div class="table-wrap"><table>
+<thead><tr><th>icao_empresa</th><th>numero_voo</th><th>partida_prevista</th><th>partida_real</th><th>chegada_real</th><th>situacao_voo</th><th>codigo_justificativa</th></tr></thead>
+<tbody>
+<tr><td>MWM</td><td>5800</td><td>2025-10-09T01:40:00.100Z</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>CANCELADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>MWM</td><td>9201</td><td>2025-10-20T12:55:00.100Z</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>CANCELADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>GLO</td><td>1114</td><td>2025-10-09T16:40:00.000Z</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>CANCELADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>TAP</td><td>0015</td><td>2025-10-09T19:10:00.000Z</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>CANCELADO</td><td><span class="null">NULL</span></td></tr>
+<tr><td>TAP</td><td>0016</td><td>2025-10-10T04:45:00.000Z</td><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>CANCELADO</td><td><span class="null">NULL</span></td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao_empresa</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO de tres letras da empresa aerea que operou a etapa. Chave para silver.empresas.&quot;}</td></tr>
+<tr><td><code>numero_voo</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Numero do voo divulgado pela companhia. Identificador comercial, nao numerico: pode ter zero a esquerda e se repete entre datas.&quot;}</td></tr>
+<tr><td><code>partida_prevista</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario de partida programado pela companhia, na hora local do aeroporto de origem.&quot;}</td></tr>
+<tr><td><code>partida_real</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario em que a aeronave efetivamente saiu. Nulo em voo cancelado, que nao chegou a partir.&quot;}</td></tr>
+<tr><td><code>chegada_real</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Horario em que a aeronave efetivamente pousou. Nulo em voo cancelado.&quot;}</td></tr>
+<tr><td><code>situacao_voo</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Situacao informada pela companhia: REALIZADO quando a etapa aconteceu, CANCELADO quando nao.&quot;}</td></tr>
+<tr><td><code>codigo_justificativa</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Motivo declarado do atraso. Deixou de ser exigido pela ANAC em abril de 2020 com a revogacao da IAC 1504: vem vazio em toda a janela deste projeto.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: VRA Silver - Voos cancelados (NULL real)</summary><pre><code># Mostra voos cancelados na Silver
+# Nota: partida_real IS NULL (valor nulo real, funciona com IS NULL)
+
+display(spark.sql(&quot;&quot;&quot;
+    SELECT
+        icao_empresa,
+        numero_voo,
+        partida_prevista,
+        partida_real,
+        chegada_real,
+        situacao_voo,
+        codigo_justificativa
+    FROM voebem.silver.vra
+    WHERE partida_real IS NULL
+      AND situacao_voo = &#x27;CANCELADO&#x27;
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Aeródromos Bronze - Primeiros registros</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>ciad</th><th>nome</th><th>municipio</th><th>uf</th><th>municipio_servido</th><th>uf_servido</th><th>latitude</th><th>longitude</th><th>altitude</th><th>situacao</th><th>_ingerido_em</th></tr></thead>
+<tbody>
+<tr><td>SBRB</td><td>AC0001</td><td>Plácido de Castro</td><td>RIO BRANCO</td><td>Acre</td><td>Rio Branco</td><td>Acre</td><td>09°52&#x27;06&quot;S</td><td>067°53&#x27;53&quot;W</td><td>193,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr>
+<tr><td>SWPI</td><td>AM0006</td><td>Parintins</td><td>PARINTINS</td><td>Amazonas</td><td>Parintins</td><td>Amazonas</td><td>02°40&#x27;25&quot;S</td><td>056°46&#x27;39&quot;W</td><td>25,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr>
+<tr><td>SBMQ</td><td>AP0001</td><td>Alberto Alcolumbre</td><td>MACAPÁ</td><td>Amapá</td><td>Macapá</td><td>Amapá</td><td>00°03&#x27;02&quot;N</td><td>051°04&#x27;20&quot;W</td><td>17,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr>
+<tr><td>SBVC</td><td>BA0005</td><td>Glauber de Andrade Rocha</td><td>VITÓRIA DA CONQUISTA</td><td>Bahia</td><td>Vitória da Conquista</td><td>Bahia</td><td>14°54&#x27;28&quot;S</td><td>040°54&#x27;53&quot;W</td><td>894,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr>
+<tr><td>SBLE</td><td>BA0006</td><td>HORÁCIO DE MATTOS</td><td>LENÇÓIS</td><td>Bahia</td><td>Lençóis</td><td>Bahia</td><td>12°28&#x27;56&quot;S</td><td>041°16&#x27;37&quot;W</td><td>506,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>ciad</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>nome</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>municipio</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>municipio_servido</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf_servido</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>latitude</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>longitude</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>altitude</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>situacao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>_ingerido_em</code></td><td>timestamp</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Aeródromos Bronze - Primeiros registros</summary><pre><code># Aerodromos na camada Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.aerodromos
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Aeródromos Silver - Registros transformados</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>ciad</th><th>nome</th><th>municipio</th><th>uf_nome</th><th>municipio_servido</th><th>uf_servido_nome</th><th>latitude_dms</th><th>longitude_dms</th><th>altitude_m</th><th>situacao</th><th>_ingerido_em</th><th>_transformado_em</th></tr></thead>
+<tbody>
+<tr><td>SBRB</td><td>AC0001</td><td>Plácido de Castro</td><td>RIO BRANCO</td><td>Acre</td><td>Rio Branco</td><td>Acre</td><td>09°52&#x27;06&quot;S</td><td>067°53&#x27;53&quot;W</td><td>193.0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td><td>2026-09-19T00:44:55.677Z</td></tr>
+<tr><td>SWPI</td><td>AM0006</td><td>Parintins</td><td>PARINTINS</td><td>Amazonas</td><td>Parintins</td><td>Amazonas</td><td>02°40&#x27;25&quot;S</td><td>056°46&#x27;39&quot;W</td><td>25.0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td><td>2026-09-19T00:44:55.677Z</td></tr>
+<tr><td>SBMQ</td><td>AP0001</td><td>Alberto Alcolumbre</td><td>MACAPÁ</td><td>Amapá</td><td>Macapá</td><td>Amapá</td><td>00°03&#x27;02&quot;N</td><td>051°04&#x27;20&quot;W</td><td>17.0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td><td>2026-09-19T00:44:55.677Z</td></tr>
+<tr><td>SBVC</td><td>BA0005</td><td>Glauber de Andrade Rocha</td><td>VITÓRIA DA CONQUISTA</td><td>Bahia</td><td>Vitória da Conquista</td><td>Bahia</td><td>14°54&#x27;28&quot;S</td><td>040°54&#x27;53&quot;W</td><td>894.0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td><td>2026-09-19T00:44:55.677Z</td></tr>
+<tr><td>SBLE</td><td>BA0006</td><td>HORÁCIO DE MATTOS</td><td>LENÇÓIS</td><td>Bahia</td><td>Lençóis</td><td>Bahia</td><td>12°28&#x27;56&quot;S</td><td>041°16&#x27;37&quot;W</td><td>506.0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td><td>2026-09-19T00:44:55.677Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO (OACI) do aerodromo. Chave de ligacao com origem e destino do VRA.&quot;}</td></tr>
+<tr><td><code>ciad</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo de identificacao do aerodromo no cadastro da ANAC.&quot;}</td></tr>
+<tr><td><code>nome</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Nome do aerodromo como publicado pela ANAC.&quot;}</td></tr>
+<tr><td><code>municipio</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Municipio onde o aerodromo esta fisicamente localizado.&quot;}</td></tr>
+<tr><td><code>uf_nome</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Nome da unidade federativa POR EXTENSO (Acre, Sao Paulo), nao a sigla: e assim que a ANAC publica.&quot;}</td></tr>
+<tr><td><code>municipio_servido</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Municipio principal atendido pelo aerodromo, que pode ser diferente do municipio onde ele fica.&quot;}</td></tr>
+<tr><td><code>uf_servido_nome</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Nome por extenso da UF do municipio servido.&quot;}</td></tr>
+<tr><td><code>latitude_dms</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Latitude em graus, minutos e segundos, como publicada pela ANAC.&quot;}</td></tr>
+<tr><td><code>longitude_dms</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Longitude em graus, minutos e segundos, como publicada pela ANAC.&quot;}</td></tr>
+<tr><td><code>altitude_m</code></td><td>double</td><td>{&quot;comment&quot;: &quot;Altitude do aerodromo em metros. Na origem vem com vírgula decimal.&quot;}</td></tr>
+<tr><td><code>situacao</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Situacao do aerodromo no cadastro da ANAC.&quot;}</td></tr>
+<tr><td><code>_ingerido_em</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Auditoria: momento da ingestao no bronze.&quot;}</td></tr>
+<tr><td><code>_transformado_em</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Auditoria: momento da construcao da silver.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Aeródromos Silver - Registros transformados</summary><pre><code># Aerodromos na camada Silver (tipos corretos, colunas renomeadas)
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.aerodromos
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Empresas Bronze - Nacionais</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th><th>_arquivo_origem</th><th>_ingerido_em</th></tr></thead>
+<tbody>
+<tr><td><span class="null">NULL</span></td><td>..</td><td>AGRICENTER AVIAÇÃO AGRÍCOLA LTDA.</td><td>AEROAGRÍCOLA</td><td>PONTA PORÃ</td><td>MS</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr>
+<tr><td><span class="null">NULL</span></td><td>..</td><td>AERO AGRÍCOLA TELES PIRES LTDA</td><td>AEROAGRÍCOLA, COMBATE A INCÊNDIOS</td><td>SORRISO</td><td>MT</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr>
+<tr><td><span class="null">NULL</span></td><td>..</td><td>AMM SERVIÇOS AÉREOS LTDA</td><td>VOOS PANORÂMICOS</td><td>ITAPEMA</td><td>SC</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr>
+<tr><td><span class="null">NULL</span></td><td>..</td><td>NAGANO E BORGES AVIAÇÃO AGRÍCOLA LTDA (AEROJET AVIAÇÃO AGRÍCOLA)</td><td>AEROAGRÍCOLA</td><td>ABAETETUBA</td><td>PA</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr>
+<tr><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>AEROCLUBE DE SÃO JOSÉ DO RIO PRETO</td><td>VOOS PANORÂMICOS</td><td>SÃO JOSÉ DO RIO PRETO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>sigla_iata</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>razao_social</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>servico</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>cidade</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>situacao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>_arquivo_origem</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>_ingerido_em</code></td><td>timestamp</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Empresas Bronze - Nacionais</summary><pre><code># Empresas Nacionais na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.empresas_nacionais
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Empresas Bronze - Estrangeiras</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th><th>_arquivo_origem</th><th>_ingerido_em</th></tr></thead>
+<tbody>
+<tr><td>PLM</td><td>EB</td><td>WAMOS AIR S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO JOSÉ DOS PINHAIS</td><td>PR</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr>
+<tr><td>IGA</td><td>TE</td><td>SKY TAXI SP. Z O.O.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>RIO DE JANEIRO</td><td>RJ</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr>
+<tr><td>ARN</td><td>AN</td><td>AERONEXUS CORPORATE</td><td>ESTRANGEIRA NÃO REGULAR</td><td>INDAIATUBA</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr>
+<tr><td>WFL</td><td>2W</td><td>WORLD 2 FLY, S.L. - W2FLY</td><td>ESTRANGEIRA NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr>
+<tr><td>AJB</td><td>Z0</td><td>AMERICAN JET S.A.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>FLORIANÓPOLIS</td><td>SC</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>sigla_iata</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>razao_social</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>servico</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>cidade</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>uf</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>situacao</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>_arquivo_origem</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>_ingerido_em</code></td><td>timestamp</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Empresas Bronze - Estrangeiras</summary><pre><code># Empresas Estrangeiras na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.empresas_estrangeiras
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Empresas Silver - Tabela unificada</summary><div class="table-wrap"><table>
+<thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th><th>origem_cadastro</th><th>_arquivo_origem</th><th>_ingerido_em</th><th>_transformado_em</th></tr></thead>
+<tbody>
+<tr><td>PLM</td><td>EB</td><td>WAMOS AIR S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO JOSÉ DOS PINHAIS</td><td>PR</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>IGA</td><td>TE</td><td>SKY TAXI SP. Z O.O.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>RIO DE JANEIRO</td><td>RJ</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>ARN</td><td>AN</td><td>AERONEXUS CORPORATE</td><td>ESTRANGEIRA NÃO REGULAR</td><td>INDAIATUBA</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>WFL</td><td>2W</td><td>WORLD 2 FLY, S.L. - W2FLY</td><td>ESTRANGEIRA NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>AJB</td><td>Z0</td><td>AMERICAN JET S.A.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>FLORIANÓPOLIS</td><td>SC</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>AMX</td><td>AM</td><td>AEROVÍAS DE MÉXICO S.A DE C.V - AEROMÉXICO</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>DWI</td><td>DM</td><td>ARAJET S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>ANZ</td><td>NZ</td><td>AIR NEW ZEALAND LIMITED</td><td>ESTRANGEIRA OFFLINE</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>GTR</td><td>GT</td><td>GALISTAIR TRANDING LTD.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>CAMPINAS</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+<tr><td>CUB</td><td>CU</td><td>CUBANA DE AVIACION S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>estrangeira</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td><td>2026-09-19T00:38:08.414Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>icao</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Codigo ICAO de tres letras da empresa. Vazio para operadores sem codigo (aviacao agricola, taxi aereo, aeroclube).&quot;}</td></tr>
+<tr><td><code>sigla_iata</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Sigla de duas letras da empresa no padrao IATA, como publicada pela ANAC.&quot;}</td></tr>
+<tr><td><code>razao_social</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Razao social da empresa aerea. E o nome que aparece para quem consome o produto final.&quot;}</td></tr>
+<tr><td><code>servico</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Tipo de servico autorizado pela ANAC: transporte regular, nao regular, aeroagricola, taxi aereo.&quot;}</td></tr>
+<tr><td><code>cidade</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Municipio da sede ou do representante legal no Brasil.&quot;}</td></tr>
+<tr><td><code>uf</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Sigla da unidade federativa da sede.&quot;}</td></tr>
+<tr><td><code>situacao</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Situacao do registro na ANAC: ATIVA ou nao. Registro inativo permanece na tabela porque a empresa pode ter voado no periodo analisado.&quot;}</td></tr>
+<tr><td><code>origem_cadastro</code></td><td>string</td><td>{&quot;comment&quot;: &quot;De qual dos dois cadastros da ANAC este registro veio: nacional ou estrangeira. E a coluna que preserva a fronteira entre as duas fontes depois da uniao.&quot;}</td></tr>
+<tr><td><code>_arquivo_origem</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Auditoria: arquivo CSV de origem.&quot;}</td></tr>
+<tr><td><code>_ingerido_em</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Auditoria: momento da ingestao no bronze.&quot;}</td></tr>
+<tr><td><code>_transformado_em</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Auditoria: momento da construcao da silver.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Empresas Silver - Tabela unificada</summary><pre><code># Empresas na Silver (união de nacionais + estrangeiras, com coluna origem_cadastro)
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.empresas
+    LIMIT 10
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Códigos de Operação Bronze</summary><div class="table-wrap"><table>
+<thead><tr><th>dominio</th><th>codigo</th><th>descricao</th></tr></thead>
+<tbody>
+<tr><td>codigo_di</td><td>0</td><td>Etapa Regular</td></tr>
+<tr><td>codigo_di</td><td>2</td><td>Etapa Extra</td></tr>
+<tr><td>codigo_di</td><td>3</td><td>Etapa de Retorno</td></tr>
+<tr><td>codigo_di</td><td>4</td><td>Inclusão de Etapa</td></tr>
+<tr><td>codigo_di</td><td>6</td><td>Etapa Não Remunerada Sem Transporte de Objetos</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>dominio</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>codigo</code></td><td>string</td><td>{}</td></tr>
+<tr><td><code>descricao</code></td><td>string</td><td>{}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Códigos de Operação Bronze</summary><pre><code># Códigos de Operação na Bronze
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.bronze.codigos_operacao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details><details><summary>Exibir amostra de dados: Códigos de Operação Silver</summary><div class="table-wrap"><table>
+<thead><tr><th>dominio</th><th>codigo</th><th>descricao</th><th>_transformado_em</th></tr></thead>
+<tbody>
+<tr><td>codigo_di</td><td>0</td><td>Etapa Regular</td><td>2026-09-19T00:44:59.769Z</td></tr>
+<tr><td>codigo_di</td><td>2</td><td>Etapa Extra</td><td>2026-09-19T00:44:59.769Z</td></tr>
+<tr><td>codigo_di</td><td>3</td><td>Etapa de Retorno</td><td>2026-09-19T00:44:59.769Z</td></tr>
+<tr><td>codigo_di</td><td>4</td><td>Inclusão de Etapa</td><td>2026-09-19T00:44:59.769Z</td></tr>
+<tr><td>codigo_di</td><td>6</td><td>Etapa Não Remunerada Sem Transporte de Objetos</td><td>2026-09-19T00:44:59.769Z</td></tr>
+</tbody></table></div>
+<details><summary>Exibir esquema do resultado</summary><div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Tipo</th><th>Metadados</th></tr></thead><tbody>
+<tr><td><code>dominio</code></td><td>string</td><td>{&quot;comment&quot;: &quot;A qual coluna do VRA este codigo pertence: codigo_di ou codigo_tipo_linha.&quot;}</td></tr>
+<tr><td><code>codigo</code></td><td>string</td><td>{&quot;comment&quot;: &quot;O codigo como aparece no VRA.&quot;}</td></tr>
+<tr><td><code>descricao</code></td><td>string</td><td>{&quot;comment&quot;: &quot;Descricao oficial do codigo, curada da pagina de descricao de variaveis da ANAC.&quot;}</td></tr>
+<tr><td><code>_transformado_em</code></td><td>timestamp</td><td>{&quot;comment&quot;: &quot;Auditoria: momento da construcao da silver.&quot;}</td></tr>
+</tbody></table></div></details><details><summary>Exibir código completo: Códigos de Operação Silver</summary><pre><code># Códigos de Operação na Silver
+display(spark.sql(&quot;&quot;&quot;
+    SELECT *
+    FROM voebem.silver.codigos_operacao
+    LIMIT 5
+&quot;&quot;&quot;))</code></pre></details></details>
+  </div>
+</section>
+
+<section id="performance">
+    <div class="section-title"><span class="num">8</span> Performance e Métricas</div>
+    <div class="card">
+        <p>As métricas abaixo foram extraídas do próprio export do Databricks quando disponíveis. Métricas não presentes no notebook não foram inventadas.</p>
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="value">19</div>
+                <div class="label">comandos executados com tempo registrado</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">37.04s</div>
+                <div class="label">tempo total registrado</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">1.95s</div>
+                <div class="label">tempo médio por comando</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">4</div>
+                <div class="label">tabelas comparadas na contagem</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">1.014.705</div>
+                <div class="label">maior volume de registros</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">24</div>
+                <div class="label">comandos preservados do notebook</div>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comando</th>
+                        <th>Tempo registrado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Contagem de linhas: Bronze vs Silver</td>
+                        <td>10.571s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA: Comparação de tipos Bronze vs Silver</td>
+                        <td>1.978s</td>
+                    </tr>
+                    <tr>
+                        <td>Aeródromos: Comparação de tipos Bronze vs Silver</td>
+                        <td>2.040s</td>
+                    </tr>
+                    <tr>
+                        <td>Códigos de Operação: Comparação de tipos</td>
+                        <td>1.508s</td>
+                    </tr>
+                    <tr>
+                        <td>Empresas: Silver vs Bronze (nacionais + estrangeiras)</td>
+                        <td>2.114s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA: String &#x27;null&#x27; e &#x27;N/A&#x27; vs NULL real</td>
+                        <td>2.195s</td>
+                    </tr>
+                    <tr>
+                        <td>Aeródromos: Vírgula decimal em altitude</td>
+                        <td>1.537s</td>
+                    </tr>
+                    <tr>
+                        <td>Aeródromos: Colunas renomeadas</td>
+                        <td>1.497s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA Bronze - Primeiros registros realizados</td>
+                        <td>1.331s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA Silver - Mesmos registros transformados</td>
+                        <td>1.440s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA Bronze - Voos cancelados (string &#x27;null&#x27;)</td>
+                        <td>1.158s</td>
+                    </tr>
+                    <tr>
+                        <td>VRA Silver - Voos cancelados (NULL real)</td>
+                        <td>1.259s</td>
+                    </tr>
+                    <tr>
+                        <td>Aeródromos Bronze - Primeiros registros</td>
+                        <td>1.177s</td>
+                    </tr>
+                    <tr>
+                        <td>Aerdromos Silver - Registros transformados</td>
+                        <td>1.124s</td>
+                    </tr>
+                    <tr>
+                        <td>Empresas Bronze - Nacionais</td>
+                        <td>1.145s</td>
+                    </tr>
+                    <tr>
+                        <td>Empresas Bronze - Estrangeiras</td>
+                        <td>1.331s</td>
+                    </tr>
+                    <tr>
+                        <td>Empresas Silver - Tabela unificada</td>
+                        <td>1.171s</td>
+                    </tr>
+                    <tr>
+                        <td>Códigos de Operação Bronze</td>
+                        <td>1.287s</td>
+                    </tr>
+                    <tr><td>Códigos de Operação Silver</td>
+                        <td>1.173s</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="highlight"><strong>Informação não encontrada:</strong> o notebook exportado não informa configuração de cluster, número de executores, memória, custo ou métricas detalhadas de shuffle.</div>
+    </div>
+</section>
+
+<section id="conclusao">
+  <div class="section-title"><span class="num">9</span> Conclusão</div>
+  <div class="card">
+    <h3>4. Resumo das Transformações</h3>
+<h3>Principais mudanças aplicadas na camada Silver:</h3>
+<h4><strong>VRA (Voo Regular Ativo)</strong></h4>
+<ul class="checklist">
+<li><strong>Tipos de dados:</strong> STRING → TIMESTAMP (partida_prevista, partida_real, chegada_prevista, chegada_real)</li>
+<li><strong>Padronização:</strong> String <code>&#x27;null&#x27;</code> → NULL real; String <code>&#x27;N/A&#x27;</code> → NULL</li>
+<li><strong>Novas colunas derivadas:</strong></li>
+<li><code>partida_prevista_data</code>, <code>partida_prevista_hora</code> (extraídas de partida_prevista)</li>
+<li><code>partida_real_data</code>, <code>partida_real_hora</code> (extraídas de partida_real)</li>
+<li><code>atraso_partida_min</code>: minutos de atraso na partida</li>
+<li><code>atraso_chegada_min</code>: minutos de atraso na chegada</li>
+<li><code>minutos_recuperados</code>: diferença entre atraso de partida e chegada</li>
+<li><strong>Auditoria:</strong> <code>_transformado_em</code> (timestamp da transformação)</li>
+</ul>
+<h4><strong>Aerodromos</strong></h4>
+<ul class="checklist">
+<li><strong>Tipos de dados:</strong> <code>altitude</code> STRING com vírgula → <code>altitude_m</code> DOUBLE</li>
+<li><strong>Colunas renomeadas para clareza:</strong></li>
+<li><code>uf</code> → <code>uf_nome</code></li>
+<li><code>uf_servido</code> → <code>uf_servido_nome</code></li>
+<li><code>latitude</code> → <code>latitude_dms</code></li>
+<li><code>longitude</code> → <code>longitude_dms</code></li>
+<li><strong>Auditoria:</strong> <code>_transformado_em</code></li>
+</ul>
+<h4><strong>Empresas</strong></h4>
+<ul class="checklist">
+<li><strong>União de tabelas:</strong> <code>empresas_nacionais</code> + <code>empresas_estrangeiras</code> → uma única tabela <code>empresas</code></li>
+<li><strong>Nova coluna:</strong> <code>origem_cadastro</code> (indica se é &#x27;nacional&#x27; ou &#x27;estrangeira&#x27;)</li>
+<li><strong>Auditoria:</strong> <code>_transformado_em</code></li>
+</ul>
+<h4><strong>Códigos de Operação</strong></h4>
+<ul class="checklist">
+<li><strong>Espelho direto:</strong> estrutura mantida sem alterações significativas</li>
+<li><strong>Auditoria:</strong> <code>_transformado_em</code> adicionada</li>
+</ul>
+<hr>
+<h3>Conclusões:</h3>
+<p>✅ <strong>Integridade de dados mantida:</strong> A contagem de linhas entre Bronze e Silver é idêntica (nenhuma linha descartada).</p>
+<p>✅ <strong>Tipagem semântica aplicada:</strong> Campos passaram de STRING genérica para tipos apropriados (TIMESTAMP, DATE, INT, DOUBLE).</p>
+<p>✅ <strong>Padronização de valores:</strong> Valores problemáticos (string <code>&#x27;null&#x27;</code>, <code>&#x27;N/A&#x27;</code>, vírgulas decimais) foram convertidos para formatos corretos.</p>
+<p>✅ <strong>Enriquecimento de dados:</strong> Colunas derivadas foram criadas para facilitar análises (separação de data/hora, cálculos de atraso).</p>
+<p>✅ <strong>Clareza e usabilidade:</strong> Colunas renomeadas para nomes mais descritivos.</p>
+<p>✅ <strong>Auditoria completa:</strong> Todas as tabelas incluem <code>_transformado_em</code> para rastreabilidade.</p>
+<hr>
+<p><strong>Observação importante:</strong> Todas as consultas neste notebook foram <strong>somente leitura</strong> (SELECT apenas). Nenhum dado foi inserido, atualizado, excluído ou modificado.</p>
+  </div>
+</section>
+
+</main>
+<footer>
+  Relatório gerado como HTML único e autocontido a partir do notebook exportado do Databricks. Nenhum dado de origem foi alterado.
+</footer>
+<script>
+(function () {
+  const root = document.documentElement;
+  const button = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('notebook-report-theme');
+  const initial = saved === 'light' || saved === 'dark' ? saved : 'dark';
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    localStorage.setItem('notebook-report-theme', theme);
+    button.textContent = theme === 'dark' ? '🌕 Modo claro' : '🌙 Modo escuro';
+    button.setAttribute('aria-label', theme === 'dark' ? 'Alternar para modo claro' : 'Alternar para modo escuro');
+  }
+  button.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  applyTheme(initial);
+})();
+</script>
+</body>
+</html>

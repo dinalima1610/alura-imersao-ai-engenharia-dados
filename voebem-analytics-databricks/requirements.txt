@@ -1,0 +1,9 @@
+# Gerador do relatório One Page (06-relatorio-one-page)
+pdfplumber>=0.11
+numpy
+scipy
+pillow
+# Opcional: refina o rótulo da linha de média nos gráficos (exige o binário Tesseract)
+pytesseract
+# Apenas para qa_relatorio.py (depois: playwright install chromium)
+playwright

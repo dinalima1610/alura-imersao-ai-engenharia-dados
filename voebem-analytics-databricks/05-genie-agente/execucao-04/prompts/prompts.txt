@@ -1,0 +1,191 @@
+Execução em prompt único
+
+Você é o analista de dados da VoeBem Analytics.
+
+Analise os dados públicos do VRA da ANAC disponíveis na tabela voebem.gold.obt_voos e gere uma análise completa sobre pontualidade, atrasos, cancelamentos e recuperação de atrasos de voos no Brasil.
+
+Objetivo:
+Gerar um relatório completo, consistente e auditável, com tabelas, métricas, filtros, ressalvas metodológicas e, quando possível, gráficos.
+
+Perguntas a responder:
+
+Quais aeroportos e rotas concentram os maiores atrasos de partida no Brasil?
+Como o atraso evolui ao longo do dia?
+Qual companhia tem maior pontualidade?
+Qual companhia tem menor taxa de cancelamento?
+Qual companhia apresenta melhor desempenho geral, considerando pontualidade, cancelamento, volume e atraso médio?
+Voos internacionais atrasam mais que domésticos? Em quais aeroportos a diferença é maior?
+Quanto atraso as companhias recuperam em voo? Em quais rotas essa recuperação não acontece?
+Qual companhia é mais recomendada para voos domésticos? E para voos internacionais?
+Qual companhia é menos recomendada para voos domésticos? E para voos internacionais?
+Há alguma consideração importante que os dados mostram e que poderia passar despercebida?
+Como a pontualidade varia por dia da semana?
+Como a pontualidade varia por mês?
+Regras obrigatórias de análise:
+
+Não misture métricas isoladas com recomendação composta.
+
+Informe separadamente:
+maior pontualidade;
+menor taxa de cancelamento;
+melhor desempenho geral.
+Se a melhor companhia geral não for a mesma que possui menor cancelamento, explique claramente o critério composto usado.
+Não diga que uma companhia tem a menor taxa de cancelamento se outra tiver percentual menor.
+
+Para recomendações, explique o critério de decisão.
+Considere, quando aplicável:
+
+pontualidade;
+taxa de cancelamento;
+atraso médio;
+volume de voos;
+escopo doméstico ou internacional;
+operação de passageiros ou carga.
+Separe claramente os escopos:
+
+geral;
+doméstico;
+internacional;
+passageiro;
+carga;
+companhias de alto volume;
+companhias de baixo volume.
+Não misture companhias cargueiras com companhias de passageiros sem deixar isso explícito.
+
+Em rotas, use a expressão “rotas envolvendo Guarulhos” quando houver origem ou destino em Guarulhos.
+Use “rotas partindo de Guarulhos” apenas se todas as rotas citadas tiverem Guarulhos como origem.
+
+Na análise por dia da semana, não use “crescimento progressivo” se houver pequenas oscilações entre os dias.
+Se for o caso, escreva algo como:
+“há tendência geral de piora ao longo da semana, com pequenas oscilações”.
+
+Na análise por mês, trate meses com volume muito baixo como amostra insuficiente.
+Se agosto/2026 tiver poucos registros, não o use para concluir pior ou melhor mês.
+Informe claramente se o período analisável consolidado vai de agosto/2025 a julho/2026, mesmo que existam registros parciais em agosto/2026.
+
+Explique o escopo temporal de forma precisa:
+
+período total disponível nos dados;
+período efetivamente usado nas análises consolidadas;
+meses excluídos ou tratados como parciais;
+motivo da exclusão ou ressalva.
+Explique diferenças entre totais.
+Se o total geral de voos for diferente do total usado em tabelas semanais, mensais ou por métrica, explique a razão provável:
+
+filtros aplicados;
+campos nulos;
+voos cancelados;
+denominadores diferentes;
+exclusão de período parcial;
+registros sem métrica calculável.
+Métricas mínimas a calcular:
+
+Para aeroportos:
+
+quantidade de voos;
+atraso médio de partida;
+percentual de voos atrasados;
+filtros aplicados.
+Para rotas:
+
+quantidade de voos;
+percentual de voos atrasados;
+atraso médio;
+origem e destino;
+filtros aplicados.
+Para companhias:
+
+quantidade de voos;
+pontualidade;
+taxa de cancelamento;
+atraso médio;
+escopo;
+filtros aplicados.
+Para doméstico vs internacional:
+
+quantidade de voos;
+percentual de atrasados;
+atraso médio;
+taxa de cancelamento;
+diferença em pontos percentuais.
+Para recuperação em voo:
+
+atraso médio de partida;
+atraso médio de chegada;
+minutos recuperados;
+rotas ou companhias em que houve piora do atraso.
+Para dia da semana:
+
+quantidade de voos;
+percentual de atrasados;
+atraso médio;
+taxa de cancelamento;
+melhor dia;
+pior dia;
+interpretação do padrão.
+Para mês:
+
+quantidade de voos;
+percentual de atrasados;
+atraso médio;
+taxa de cancelamento;
+melhor mês;
+pior mês;
+meses fora do padrão;
+indicação de meses parciais ou com amostra insuficiente.
+Definições obrigatórias:
+
+Pontualidade: voo pontual é aquele com atraso de partida menor ou igual a 15 minutos, conforme o campo disponível.
+Percentual de atrasados: calcule apenas sobre voos com métrica de pontualidade disponível.
+Taxa de cancelamento: calcule sobre o total de voos programados.
+Atraso médio: não misture voos cancelados no cálculo de atraso.
+Recuperação em voo: diferença entre atraso de partida e atraso de chegada. Valor positivo indica recuperação; valor negativo indica piora.
+Relatório final:
+
+Gere um relatório completo com a seguinte estrutura:
+
+Título.
+Contexto dos dados.
+Escopo temporal e filtros gerais.
+Aeroportos e rotas com maiores atrasos de partida.
+Evolução do atraso ao longo do dia.
+Maior pontualidade, menor cancelamento e melhor desempenho geral por companhia.
+Comparação entre voos domésticos e internacionais.
+Recuperação de atraso em voo.
+Companhias mais recomendadas por escopo.
+Companhias menos recomendadas por escopo.
+Considerações importantes que poderiam passar despercebidas.
+Análise por dia da semana.
+Análise por mês.
+Consolidação final com principais conclusões.
+Escopo, filtros aplicados, definições das métricas e ressalvas metodológicas.
+Inclua tabelas para todas as análises principais.
+
+Quando possível, gere gráficos para:
+
+top aeroportos com maiores atrasos;
+evolução do atraso ao longo do dia;
+comparação doméstico vs internacional;
+recuperação por companhia;
+pontualidade por dia da semana;
+pontualidade por mês.
+Antes de finalizar, faça uma checagem de consistência:
+
+Verifique se alguma conclusão textual contradiz tabelas ou métricas.
+Verifique se as companhias citadas como melhores ou piores respeitam o escopo correto.
+Verifique se os totais usados em cada seção têm denominador explicado.
+Verifique se meses parciais não foram tratados como meses completos.
+Verifique se a linguagem usada está compatível com os dados:
+“progressivo” somente se não houver oscilação relevante;
+“envolvendo Guarulhos” quando houver origem ou destino;
+“partindo de Guarulhos” somente quando Guarulhos for origem.
+Se encontrar conflito, corrija a redação e explique a ressalva. Não altere dados apenas para harmonizar a narrativa.
+Ao final, inclua uma seção “Ressalvas metodológicas” com:
+
+diferenças de denominadores;
+filtros de volume;
+meses parciais;
+voos cancelados;
+campos nulos;
+separação entre passageiros e carga;
+diferença entre métrica isolada e recomendação composta.

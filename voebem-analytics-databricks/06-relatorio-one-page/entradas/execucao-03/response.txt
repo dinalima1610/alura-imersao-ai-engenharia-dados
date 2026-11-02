@@ -1,0 +1,3499 @@
+Execução em 3 prompts
+
+Prompt inicial
+Você é o analista de dados da VoeBem Analytics. Responde sobre pontualidade, atrasos, cancelamentos de voos no Brasil, com base nos dados públicos do VRA da ANAC.
+Responda as seguintes questões:
+
+1. Quais aeroportos e rotas concentram os maiores atrasos de partida no Brasil?
+
+2. Como o atraso evolui ao longo do dia?
+
+3. Qual companhia entrega melhor pontualidade e menor taxa de cancelamento?
+Para a companhia com melhor pontualidade e menor taxa de cancelamento, não assuma que uma única companhia vence os dois critérios. Informe separadamente:
+3.1. companhia com maior pontualidade;
+3.2. companhia com menor taxa de cancelamento;
+3.3. melhor recomendação geral, explicando o critério de desempate ou ponderação.
+
+4. Voos internacionais atrasam mais que domésticos? Em quais aeroportos a diferença e maior?
+
+5. Quanto atraso as companhias recuperam em voo, e em que rotas isso não acontece?
+
+6. Com base nestas análise, qual a companhia mais recomendada para voos domésticos? E para voos internacionais? Detalhe como chegou às respostas.
+
+Antes de seguir para os itens 7 e 8, revise as conclusões dos itens 1 a 6 em busca de inconsistências entre narrativa, tabelas e métricas.
+Não altere os dados já apurados, mas corrija qualquer frase interpretativa que esteja em conflito com os resultados numéricos.
+
+7. Com base nestas análises, qual a companhia menos recomendada para voos domésticos? E para voos internacionais? Detalhe como chegou às respostas.
+9. Nas informações disponibilizadas, alguma consideração a ser mostrada para qual não foi dada a devida importância? Justifique a resposta e mostre com chegou a ela.
+
+Ao final, gere uma versão consolidada da análise, deixando claros:
+° escopo usado em cada item;
+° filtros aplicados;
+° diferenças entre melhor pontualidade, menor cancelamento e melhor desempenho geral;
+° eventuais ressalvas quando uma conclusão depende de critério composto.
+
+
+Thought process
+Vou realizar uma análise completa sobre pontualidade, atrasos e cancelamentos de voos no Brasil. Começarei executando as consultas necessárias para responder cada questão.
+
+Visão geral dos dados
+Used tables: obt_voos
+
+SELECT
+  COUNT(*) AS quantidade_voos,
+  COUNT(DISTINCT nome_companhia) AS companhias,
+  COUNT(DISTINCT rota_icao) AS rotas,
+  MIN(partida_prevista_data) AS inicio_periodo,
+  MAX(partida_prevista_data) AS fim_periodo
+FROM
+  `voebem`.`gold`.`obt_voos`
+
+|quantidade_voos|companhias|rotas|inicio_periodo|fim_periodo|
+|---|---|---|---|---|
+|1,014,664|118|3104|2025-08-01|2026-08-01|
+
+
+Aeroportos brasileiros com maiores atrasos de partida
+Used tables: obt_voos
+
+SELECT
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  pais_origem = 'Brasil'
+GROUP BY
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem
+HAVING
+  COUNT(*) >= 5000
+ORDER BY
+  pct_atrasados DESC
+LIMIT 15
+
+|nome_aeroporto_origem|municipio_origem|uf_origem|voos|atraso_medio_min|pct_atrasados|
+|---|---|---|---|---|---|
+|Guarulhos - Governador André Franco Montoro|GUARULHOS|São Paulo|147,968|13.42|27.1|
+|São Paulo/Congonhas - Deputado Freitas Nobre|SÃO PAULO|São Paulo|95,707|7.19|19.42|
+|Viracopos|CAMPINAS|São Paulo|60,382|10.48|17.67|
+|Cataratas|FOZ DO IGUAÇU|Paraná|8,620|6.99|16.82|
+|Hercílio Luz|FLORIANÓPOLIS|Santa Catarina|19,247|7.73|16|
+|Aeroporto Internacional de Campo Grande - Ueze Elias Zahran|CAMPO GRANDE|Mato Grosso do Sul|5,007|4.46|15.74|
+|Ten Cel Aviador César Bombonato|UBERLÂNDIA|Minas Gerais|5,687|4.15|15.4|
+|Porto Seguro|PORTO SEGURO|Bahia|9,664|4.1|14.97|
+|Eduardo Gomes|MANAUS|Amazonas|16,194|9.31|14.83|
+|Tancredo Neves|CONFINS|Minas Gerais|56,874|5.08|14.67|
+|Santa Maria|ARACAJU|Sergipe|5,170|2.66|14.55|
+|Afonso Pena|CURITIBA|Paraná|26,589|4.98|14.48|
+|Presidente Castro Pinto|BAYEUX|Paraíba|6,680|3.33|14.45|
+|RIO DE JANEIRO/GALEÃO - ANTÔNIO CARLOS JOBIM|RIO DE JANEIRO|Rio de Janeiro|62,644|6.22|14.33|
+|Ministro Victor Konder|NAVEGANTES|Santa Catarina|8,437|3.13|14.09|
+
+
+Evolução do atraso ao longo do dia
+Used tables: obt_voos
+
+SELECT
+  hora_partida_prevista AS hora,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  hora_partida_prevista IS NOT NULL
+GROUP BY
+  hora_partida_prevista
+ORDER BY
+  hora_partida_prevista
+
+|hora|voos|atraso_medio_min|pct_atrasados|
+|---|---|---|---|
+|0|10,396|23.48|22.5|
+|1|10,649|12.01|17.19|
+|2|18,253|5.06|14.23|
+|3|20,952|2.69|12.1|
+|4|18,786|2.92|9.33|
+|5|32,942|0.92|8.34|
+|6|45,316|3.11|9.42|
+|7|39,052|6.02|13.6|
+|8|63,740|5.91|13.8|
+|9|58,626|6.4|14.25|
+|10|46,551|6|15.2|
+|11|52,681|6|15.47|
+|12|53,802|6.6|17.18|
+|13|49,251|7.58|17.94|
+|14|55,798|7.12|17.77|
+|15|51,597|8.31|18.42|
+|16|41,291|9.12|19.85|
+|17|67,289|9.24|21.82|
+|18|50,713|9.58|21.81|
+|19|44,530|10.26|22.65|
+|20|40,636|8.81|21.38|
+|21|41,112|10.32|20.28|
+|22|34,951|12.64|25.83|
+|23|34,952|12.72|25.97|
+
+
+Pontualidade e cancelamento por companhia
+Used tables: obt_voos
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+|nome_companhia|voos|atraso_medio_min|pct_cancelados|pct_pontuais|
+|---|---|---|---|---|
+|GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)|259,303|4.67|1.13|86.06|
+|AZUL LINHAS AÉREAS BRASILEIRAS S/A|284,141|4.4|1.55|85.79|
+|AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)|14,530|5.38|14.35|84.4|
+|LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)|13,957|7.51|0.64|81.92|
+|TAM LINHAS AÉREAS S.A.|302,082|6.58|1.49|80.4|
+|TAP - TRANSPORTES AÉREOS PORTUGUESES S/A|10,422|18.24|1.43|59.23|
+
+
+Agora vou continuar com as demais análises
+
+Rotas com maiores atrasos de partida
+Used tables: obt_voos
+
+SELECT
+  rota_municipios,
+  rota_icao,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  rota_municipios,
+  rota_icao
+HAVING
+  COUNT(*) >= 2000
+ORDER BY
+  pct_atrasados DESC
+LIMIT 15
+
+|rota_municipios|rota_icao|voos|atraso_medio_min|pct_atrasados|
+|---|---|---|---|---|
+|GUARULHOS - FORTALEZA|SBGR - SBFZ|3924|16.14|36.64|
+|GUARULHOS - MANAUS|SBGR - SBEG|2887|22.02|35.71|
+|KMIA - GUARULHOS|KMIA - SBGR|2260|53.94|34.6|
+|GUARULHOS - BELÉM|SBGR - SBBE|2825|14|33.61|
+|GUARULHOS - SCEL|SBGR - SCEL|5361|29.11|32.88|
+|GUARULHOS - SÃO GONÇALO DO AMARANTE|SBGR - SBSG|2476|14.49|32.25|
+|GUARULHOS - FLORIANÓPOLIS|SBGR - SBFL|3541|16.11|32.12|
+|GUARULHOS - BAYEUX|SBGR - SBJP|2155|15.09|32.02|
+|GUARULHOS - SALVADOR|SBGR - SBSV|4789|13.96|31.49|
+|GUARULHOS - BRASÍLIA|SBGR - SBBR|4651|14.64|31.28|
+|GUARULHOS - FOZ DO IGUAÇU|SBGR - SBFI|2608|13.3|28.36|
+|GUARULHOS - CONFINS|SBGR - SBCF|4964|12.41|27.74|
+|GUARULHOS - CURITIBA|SBGR - SBCT|4948|11.31|27.38|
+|GUARULHOS - VITÓRIA|SBGR - SBVT|3418|12.5|27.15|
+|GUARULHOS - GOIÂNIA|SBGR - SBGO|3100|11.59|27.08|
+
+
+Comparação doméstico vs internacional
+Used tables: obt_voos
+
+SELECT
+  escopo_voo,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  escopo_voo
+ORDER BY
+  voos DESC
+
+|escopo_voo|voos|atraso_medio_min|pct_atrasados|pct_cancelados|
+|---|---|---|---|---|
+|Domestico|819,236|5.13|15.86|1.72|
+|Internacional|195,428|19.36|25.37|7.7|
+
+
+Atraso por aeroporto e escopo (doméstico vs internacional)
+Used tables: obt_voos
+
+SELECT
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  escopo_voo,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  pais_origem = 'Brasil'
+GROUP BY
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  escopo_voo
+HAVING
+  COUNT(*) >= 1000
+ORDER BY
+  nome_aeroporto_origem,
+  escopo_voo
+
+|nome_aeroporto_origem|municipio_origem|uf_origem|escopo_voo|voos|atraso_medio_min|pct_atrasados|
+|---|---|---|---|---|---|---|
+|AEROPORTO INTERNACIONAL RECIFE/GUARARAPES - GILBERTO FREYRE|RECIFE|Pernambuco|Domestico|35,523|4.37|13.38|
+|AEROPORTO INTERNACIONAL RECIFE/GUARARAPES - GILBERTO FREYRE|RECIFE|Pernambuco|Internacional|1,876|7.86|18.88|
+|Aeroporto Internacional Senador Nilo Coelho|PETROLINA|Pernambuco|Domestico|1,986|-2.26|9.22|
+|Aeroporto Internacional de Campo Grande - Ueze Elias Zahran|CAMPO GRANDE|Mato Grosso do Sul|Domestico|5,003|4.45|15.72|
+|Aeroporto Internacional do Rio Grande do Norte / São Gonçalo do Amarante - Governador Aluizio Alves|SÃO GONÇALO DO AMARANTE|Rio Grande do Norte|Domestico|8,391|2.41|12.68|
+|Aeroporto Regional do Oeste - Cel. Adalberto Mendes da Silva - Cascavel - Paraná|CASCAVEL|Paraná|Domestico|2,074|7.2|18.41|
+|Afonso Pena|CURITIBA|Paraná|Domestico|25,164|3.8|13.94|
+|Afonso Pena|CURITIBA|Paraná|Internacional|1,425|34.43|27.97|
+|Alberto Alcolumbre|MACAPÁ|Amapá|Domestico|2,420|1.91|12.03|
+|Atlas Brasil Cantanhede|BOA VISTA|Roraima|Domestico|1,231|-0.31|8.8|
+|Bahia - Jorge Amado|ILHÉUS|Bahia|Domestico|2,650|2.91|14.66|
+|Brigadeiro Lysias Rodrigues|PALMAS|Tocantins|Domestico|2,900|-1.59|8.5|
+|Carajás|PARAUAPEBAS|Pará|Domestico|1,352|2.29|13.33|
+|Cataratas|FOZ DO IGUAÇU|Paraná|Domestico|8,473|6.6|16.72|
+|DEPUTADO LUÍS EDUARDO MAGALHÃES|SALVADOR|Bahia|Domestico|29,109|2.22|11.66|
+|DEPUTADO LUÍS EDUARDO MAGALHÃES|SALVADOR|Bahia|Internacional|1,556|10.84|23.6|
+|Eduardo Gomes|MANAUS|Amazonas|Domestico|14,268|5.94|14.09|
+|Eduardo Gomes|MANAUS|Amazonas|Internacional|1,926|45.07|22.76|
+|Eurico de Aguiar Salles|VITÓRIA|Espírito Santo|Domestico|13,573|2.56|12.8|
+|Fernando de Noronha|FERNANDO DE NORONHA|Pernambuco|Domestico|1,663|3.08|14|
+|Glauber de Andrade Rocha|VITÓRIA DA CONQUISTA|Bahia|Domestico|1,812|2.21|12.68|
+|Governador Jorge Teixeira de Oliveira|PORTO VELHO|Rondônia|Domestico|2,159|8.8|16.57|
+|Governador José Richa|LONDRINA|Paraná|Domestico|3,099|3.69|13.95|
+|Guarulhos - Governador André Franco Montoro|GUARULHOS|São Paulo|Domestico|103,348|12.54|27.87|
+|Guarulhos - Governador André Franco Montoro|GUARULHOS|São Paulo|Internacional|44,620|15.55|25.21|
+|Hercílio Luz|FLORIANÓPOLIS|Santa Catarina|Domestico|14,353|5.02|15.09|
+|Hercílio Luz|FLORIANÓPOLIS|Santa Catarina|Internacional|4,894|16.8|19.08|
+|Hugo Cantergiani|CAXIAS DO SUL|Rio Grande do Sul|Domestico|1,086|-1.34|9.87|
+|INTERNACIONAL DE BELÉM/VAL DE CANS/JÚLIO CEZAR RIBEIRO|BELÉM|Pará|Domestico|15,279|2.74|12.69|
+|INTERNACIONAL DE BELÉM/VAL DE CANS/JÚLIO CEZAR RIBEIRO|BELÉM|Pará|Internacional|1,065|15.35|20.41|
+|Jacarepaguá - Roberto Marinho|RIO DE JANEIRO|Rio de Janeiro|Domestico|1,198|11.87|24.18|
+|João Corrêa da Rocha|MARABÁ|Pará|Domestico|1,645|-4.52|4.96|
+|Lauro Carneiro de Loyola|JOINVILLE|Santa Catarina|Domestico|2,389|2.81|13.34|
+|Leite Lopes|RIBEIRÃO PRETO|São Paulo|Domestico|4,261|1.73|12.62|
+|MARECHAL CUNHA MACHADO|SÃO LUÍS|Maranhão|Domestico|6,805|3.97|12.71|
+|Maestro Wilson Fonseca|SANTARÉM|Pará|Domestico|2,189|-1.23|8.06|
+|Marechal Rondon|CUIABÁ|Mato Grosso|Domestico|9,880|2.24|13.03|
+|Ministro Victor Konder|NAVEGANTES|Santa Catarina|Domestico|8,407|3.08|14.05|
+|Mário Ribeiro|MONTES CLAROS|Minas Gerais|Domestico|1,963|3.85|13.47|
+|Orlando Bezerra de Menezes|JUAZEIRO DO NORTE|Ceará|Domestico|2,183|1.89|12.86|
+|Pinto Martins|FORTALEZA|Ceará|Domestico|19,388|2.8|12.97|
+|Pinto Martins|FORTALEZA|Ceará|Internacional|1,252|10.12|22.13|
+|Plácido de Castro|RIO BRANCO|Acre|Domestico|1,552|3.1|11.28|
+|Porto Seguro|PORTO SEGURO|Bahia|Domestico|9,422|3.99|15.02|
+|Prefeito Renato Moreira|null|null|Domestico|1,458|-3.16|9.54|
+|Presidente Castro Pinto|BAYEUX|Paraíba|Domestico|6,628|3.22|14.48|
+|Presidente João Batista Figueiredo|SINOP|Mato Grosso|Domestico|1,794|1.52|12.75|
+|Presidente Juscelino Kubitschek|BRASÍLIA|Distrito Federal|Domestico|57,839|2.93|11.32|
+|Presidente Juscelino Kubitschek|BRASÍLIA|Distrito Federal|Internacional|2,884|3.97|11.38|
+|Presidente Prudente|PRESIDENTE PRUDENTE|São Paulo|Domestico|1,236|2.75|12.07|
+|Professor Eribelto Manoel Reino|SÃO JOSÉ DO RIO PRETO|São Paulo|Domestico|4,551|2.75|13.76|
+|RIO DE JANEIRO/GALEÃO - ANTÔNIO CARLOS JOBIM|RIO DE JANEIRO|Rio de Janeiro|Domestico|44,246|3.57|12.45|
+|RIO DE JANEIRO/GALEÃO - ANTÔNIO CARLOS JOBIM|RIO DE JANEIRO|Rio de Janeiro|Internacional|18,398|12.86|19.06|
+|SENADOR PETRÔNIO PORTELLA|TERESINA|Piauí|Domestico|4,364|-0.3|10.42|
+|Salgado Filho|PORTO ALEGRE|Rio Grande do Sul|Domestico|28,925|3.52|13.29|
+|Salgado Filho|PORTO ALEGRE|Rio Grande do Sul|Internacional|1,588|3.94|14.1|
+|Santa Genoveva|GOIÂNIA|Goiás|Domestico|13,633|2.66|13.32|
+|Santa Maria|ARACAJU|Sergipe|Domestico|5,170|2.66|14.55|
+|Santos Dumont|RIO DE JANEIRO|Rio de Janeiro|Domestico|29,565|1.27|10.64|
+|Serafin Enoss Bertaso|CHAPECÓ|Santa Catarina|Domestico|2,786|4.26|15.21|
+|São Paulo/Congonhas - Deputado Freitas Nobre|SÃO PAULO|São Paulo|Domestico|95,707|7.19|19.42|
+|Sílvio Name Júnior|MARINGÁ|Paraná|Domestico|3,694|5.08|12.97|
+|Tancredo Neves|CONFINS|Minas Gerais|Domestico|55,304|5.01|14.52|
+|Tancredo Neves|CONFINS|Minas Gerais|Internacional|1,570|7.68|20.07|
+|Ten Cel Aviador César Bombonato|UBERLÂNDIA|Minas Gerais|Domestico|5,686|4.15|15.4|
+|Usiminas|SANTANA DO PARAÍSO|Minas Gerais|Domestico|1,242|4.19|15.71|
+|Viracopos|CAMPINAS|São Paulo|Domestico|54,268|6.62|16.36|
+|Viracopos|CAMPINAS|São Paulo|Internacional|6,114|58.53|33.9|
+|Zumbi dos Palmares|MACEIÓ|Alagoas|Domestico|10,354|2.05|11.7|
+
+
+Recuperação de atraso em voo por companhia
+Used tables: obt_voos
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_saida_min,
+  ROUND(AVG(atraso_chegada_min), 2) AS atraso_chegada_min,
+  ROUND(AVG(minutos_recuperados), 2) AS recuperados_medio_min
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  minutos_recuperados IS NOT NULL
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  recuperados_medio_min DESC
+
+|nome_companhia|voos|atraso_saida_min|atraso_chegada_min|recuperados_medio_min|
+|---|---|---|---|---|
+|TAP - TRANSPORTES AÉREOS PORTUGUESES S/A|10,106|18.24|8.45|9.79|
+|GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)|251,555|4.67|0.13|4.54|
+|AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)|10,857|5.38|2.14|3.23|
+|TAM LINHAS AÉREAS S.A.|293,095|6.58|3.39|3.19|
+|AZUL LINHAS AÉREAS BRASILEIRAS S/A|273,473|4.4|1.81|2.59|
+|LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)|12,763|7.51|5.26|2.26|
+
+
+Rotas com menor recuperação de atraso em voo
+Used tables: obt_voos
+
+SELECT
+  rota_municipios,
+  rota_icao,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_saida_min,
+  ROUND(AVG(atraso_chegada_min), 2) AS atraso_chegada_min,
+  ROUND(AVG(minutos_recuperados), 2) AS recuperados_medio_min
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  minutos_recuperados IS NOT NULL
+GROUP BY
+  rota_municipios,
+  rota_icao
+HAVING
+  COUNT(*) >= 2000
+ORDER BY
+  recuperados_medio_min ASC
+LIMIT 15
+
+|rota_municipios|rota_icao|voos|atraso_saida_min|atraso_chegada_min|recuperados_medio_min|
+|---|---|---|---|---|---|
+|CAMPO GRANDE - GUARULHOS|SBCG - SBGR|2211|4.37|8.54|-4.17|
+|FLORIANÓPOLIS - GUARULHOS|SBFL - SBGR|3415|8.4|9.46|-1.06|
+|NAVEGANTES - GUARULHOS|SBNF - SBGR|2338|5.31|6.29|-0.98|
+|GOIÂNIA - GUARULHOS|SBGO - SBGR|3009|6.31|6.57|-0.26|
+|FOZ DO IGUAÇU - GUARULHOS|SBFI - SBGR|2532|11.27|10.95|0.32|
+|CAMPINAS - CONFINS|SBKP - SBCF|2664|6.31|5.79|0.52|
+|PORTO ALEGRE - GUARULHOS|SBPA - SBGR|6417|5.09|4.37|0.72|
+|MACEIÓ - GUARULHOS|SBMO - SBGR|3246|1.91|1.16|0.75|
+|SÃO GONÇALO DO AMARANTE - GUARULHOS|SBSG - SBGR|2437|5.57|4.61|0.96|
+|SABE - GUARULHOS|SABE - SBGR|4438|9.82|8.86|0.96|
+|RECIFE - CONFINS|SBRF - SBCF|2044|10.35|9.22|1.13|
+|RECIFE - GUARULHOS|SBRF - SBGR|5996|7.38|6.24|1.14|
+|RIO DE JANEIRO - CURITIBA|SBGL - SBCT|2860|1.54|0.37|1.18|
+|GUARULHOS - SKBO|SBGR - SKBO|2281|13.75|12.57|1.18|
+|SALVADOR - BRASÍLIA|SBSV - SBBR|2278|0.18|-1.03|1.21|
+
+
+Desempenho das companhias em voos domésticos
+Used tables: obt_voos
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  escopo_voo = 'Domestico'
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+|nome_companhia|voos|atraso_medio_min|pct_cancelados|pct_pontuais|
+|---|---|---|---|---|
+|GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)|241,561|4.67|1.15|86.03|
+|AZUL LINHAS AÉREAS BRASILEIRAS S/A|277,348|4.23|1.54|86.01|
+|AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)|14,527|5.38|14.35|84.4|
+|TAM LINHAS AÉREAS S.A.|277,279|6.18|1.55|80.89|
+
+
+Desempenho das companhias em voos internacionais
+Used tables: obt_voos
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  escopo_voo = 'Internacional'
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 1000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+|nome_companhia|voos|atraso_medio_min|pct_cancelados|pct_pontuais|
+|---|---|---|---|---|
+|COMPAÑIA PANAMEÑA DE AVIACION S.A. (COPA AIRLINES)|9,546|0.52|2.88|91.72|
+|BRITISH AIRWAYS PLC|2,197|3.77|1.37|87.89|
+|GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)|17,742|4.56|0.96|86.46|
+|JETSMART AIRLINES S.A - ARGENTINA|4,565|13.46|1.95|85.96|
+|JETSMART AIRLINES SPA - CHILE|4,205|18.02|2.02|83.98|
+|SKY AIRLINE S.A.|5,679|9.49|10.99|81.96|
+|LATAM AIRLINES PERU (EX-LAN PERU S.A.)|4,312|7.52|0.58|81.92|
+|LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)|13,957|7.51|0.64|81.92|
+|DELTA AIR LINES INC.|2,630|16.17|2.47|80.08|
+|KLM CIA. REAL HOLANDESA DE AVIAÇÃO|1,543|-0.06|2.59|78.17|
+|AMERICAN AIRLINES, INC.|4,701|37.53|2.32|77.82|
+|AEROVIAS DEL CONTINENTE AMERICANO S.A. AVIANCA|5,415|10.75|1.85|77.79|
+|AZUL LINHAS AÉREAS BRASILEIRAS S/A|6,793|11.45|1.9|76.77|
+|EMIRATES|2,546|12.06|9.62|76.05|
+|TAM LINHAS AÉREAS S.A.|24,803|11|0.75|74.92|
+|ITALIA TRANSPORTO AEREO S.P.A.|2,678|17.34|22.48|74.67|
+|AIRES - AEROVÍAS DE INTEGRACÍON REGIONAL S.A.|1,496|14.58|0.8|73.85|
+|UNITED AIRLINES, INC|3,726|28.58|1.85|72.79|
+|AIR EUROPA LINEAS AEREAS SOCIEDAD ANONIMA|1,122|11.1|3.83|72.7|
+|TURKISH AIRLINES INC|3,052|28.4|1.44|71.8|
+|DEUTSCHE LUFTHANSA A.G.|1,745|18.49|15.82|71.67|
+|TRANSPORTE AÉREOS DEL MERCOSUR S.A. (TAM MERCOSUR)|1,304|12.81|0.69|71.61|
+|AEROLINEAS ARGENTINAS S/A|9,009|14.95|2.79|71.21|
+|QATAR AIRWAYS GROUP|3,553|24.69|41.09|68.65|
+|FB LÍNEAS AÉREAS S.A (FLYBONDI)|3,300|37.87|10.12|67.28|
+|SOCIÉTÉ AIR FRANCE|3,302|22.36|0.91|66.21|
+|AIR CANADA|1,850|46.27|2.7|64.65|
+|TAP - TRANSPORTES AÉREOS PORTUGUESES S/A|10,422|18.24|1.43|59.23|
+|IBÉRIA LINEAS AEREAS DE ESPAÑA SOCIEDAD ANONIMA OPERADORA|5,199|24.27|54.61|56.31|
+|BOA BOLIVIANA DE AVIACIÓN|1,468|26.62|17.85|52.44|
+|ARAJET S.A.|3,026|48.3|73.79|44.8|
+|ETHIOPIAN AIRLINES GROUP|3,467|62.08|45.05|40.48|
+|TAMPA CARGO S.A.|2,086|177.43|20.28|39.4|
+|ABSA - AEROLINHAS BRASILEIRAS S.A.|3,603|95.76|25.76|27.03|
+|ATLAS AIR INC|2,317|244.21|16.49|25.81|
+|CARGOLUX AIRLINES INTERNATIONAL S/A|1,296|143.83|3.01|24.81|
+|LAN CARGO S.A.|3,000|124.93|4.77|24.07|
+|LÍNEA AÉREA CARGUEIRA DE COLOMBIA S.A - LANCO|1,647|164.56|7.1|21.07|
+
+
+Vou buscar a segunda página dos dados de aeroportos
+
+Executed query
+Used tables: obt_voos
+
+WITH aeroporto_escopo AS (
+  SELECT
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo,
+    COUNT(*) AS voos,
+    ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+    ROUND(
+      100.0
+        * try_divide(
+          SUM(
+            CASE
+              WHEN partida_pontual = false THEN 1
+              ELSE 0
+            END
+          ),
+          SUM(
+            CASE
+              WHEN partida_pontual IS NOT NULL THEN 1
+              ELSE 0
+            END
+          )
+        ),
+      2
+    ) AS pct_atrasados
+  FROM
+    `voebem`.`gold`.`obt_voos`
+  WHERE
+    pais_origem = 'Brasil'
+  GROUP BY
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo
+  HAVING
+    COUNT(*) >= 1000
+),
+aeroporto_diff AS (
+  SELECT
+    d.nome_aeroporto_origem,
+    d.municipio_origem,
+    d.uf_origem,
+    d.voos AS voos_domesticos,
+    d.pct_atrasados AS pct_atrasados_domestico,
+    i.voos AS voos_internacionais,
+    i.pct_atrasados AS pct_atrasados_internacional,
+    ROUND(i.pct_atrasados - d.pct_atrasados, 2) AS diferenca_pct_atrasados
+  FROM
+    aeroporto_escopo d
+      INNER JOIN aeroporto_escopo i
+        ON d.nome_aeroporto_origem = i.nome_aeroporto_origem
+        AND d.escopo_voo = 'Domestico'
+        AND i.escopo_voo = 'Internacional'
+)
+SELECT
+  *
+FROM
+  aeroporto_diff
+ORDER BY
+  diferenca_pct_atrasados DESC
+LIMIT 15
+
+|nome_aeroporto_origem|municipio_origem|uf_origem|voos_domesticos|pct_atrasados_domestico|voos_internacionais|pct_atrasados_internacional|diferenca_pct_atrasados|
+|---|---|---|---|---|---|---|---|
+|Viracopos|CAMPINAS|São Paulo|54,268|16.36|6,114|33.9|17.54|
+|Afonso Pena|CURITIBA|Paraná|25,164|13.94|1,425|27.97|14.03|
+|DEPUTADO LUÍS EDUARDO MAGALHÃES|SALVADOR|Bahia|29,109|11.66|1,556|23.6|11.94|
+|Pinto Martins|FORTALEZA|Ceará|19,388|12.97|1,252|22.13|9.16|
+|Eduardo Gomes|MANAUS|Amazonas|14,268|14.09|1,926|22.76|8.67|
+|INTERNACIONAL DE BELÉM/VAL DE CANS/JÚLIO CEZAR RIBEIRO|BELÉM|Pará|15,279|12.69|1,065|20.41|7.72|
+|RIO DE JANEIRO/GALEÃO - ANTÔNIO CARLOS JOBIM|RIO DE JANEIRO|Rio de Janeiro|44,246|12.45|18,398|19.06|6.61|
+|Tancredo Neves|CONFINS|Minas Gerais|55,304|14.52|1,570|20.07|5.55|
+|AEROPORTO INTERNACIONAL RECIFE/GUARARAPES - GILBERTO FREYRE|RECIFE|Pernambuco|35,523|13.38|1,876|18.88|5.5|
+|Hercílio Luz|FLORIANÓPOLIS|Santa Catarina|14,353|15.09|4,894|19.08|3.99|
+|Salgado Filho|PORTO ALEGRE|Rio Grande do Sul|28,925|13.29|1,588|14.1|0.81|
+|Presidente Juscelino Kubitschek|BRASÍLIA|Distrito Federal|57,839|11.32|2,884|11.38|0.06|
+|Guarulhos - Governador André Franco Montoro|GUARULHOS|São Paulo|103,348|27.87|44,620|25.21|-2.66|
+
+
+Agora vou criar as visualizações para apoiar a análise
+
+Perfeito! Agora vou preparar a resposta final consolidada com todas as análises solicitadas.
+
+
+Análise Completa de Pontualidade e Atrasos de Voos no Brasil
+
+Contexto dos Dados
+A análise cobre 1.014.664 voos de 118 companhias aéreas operando em 3.104 rotas no período de agosto/2025 a agosto/2026. 1
+
+_______________________________________________________________________________
+
+1. Aeroportos e Rotas com Maiores Atrasos de Partida
+Aeroportos Brasileiros
+Guarulhos (São Paulo) lidera com 27,1% de voos atrasados, seguido por Congonhas (19,4%) e Viracopos (17,7%). 2
+
+SELECT
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  pais_origem = 'Brasil'
+GROUP BY
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem
+HAVING
+  COUNT(*) >= 5000
+ORDER BY
+  pct_atrasados DESC
+LIMIT 15
+
+Top 10 Aeroportos Brasileiros com Maiores Atrasos de Partida
+
+Source: Aeroportos brasileiros com maiores atrasos de partida
+
+Principais achados:
+° Guarulhos concentra o maior volume (147.968 voos) e a maior taxa de atraso entre aeroportos de grande porte
+° O atraso médio em Guarulhos é de 13,4 minutos
+° Aeroportos menores como Campo Grande (15,7%) e Uberlândia (15,4%) também apresentam taxas elevadas
+
+Filtros aplicados: Aeroportos brasileiros (pais_origem = 'Brasil') com volume mínimo de 5.000 voos.
+
+Rotas com Maiores Atrasos
+As rotas partindo de Guarulhos dominam o ranking de atrasos: 3
+1. Guarulhos → Fortaleza: 36,6% atrasados (3.924 voos)
+2. Guarulhos → Manaus: 35,7% atrasados (2.887 voos)
+3. Miami → Guarulhos: 34,6% atrasados (2.260 voos) - rota internacional
+4. Guarulhos → Belém: 33,6% atrasados (2.825 voos)
+5. Guarulhos → Santiago (SCEL): 32,9% atrasados (5.361 voos)
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+
+_______________________________________________________________________________
+
+2. Evolução do Atraso ao Longo do Dia
+O efeito cascata é evidente: atrasos aumentam progressivamente durante o dia. 4
+
+SELECT
+  hora_partida_prevista AS hora,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  hora_partida_prevista IS NOT NULL
+GROUP BY
+  hora_partida_prevista
+ORDER BY
+  hora_partida_prevista
+
+Evolução do Atraso ao Longo do Dia
+
+Source: Evolução do atraso ao longo do dia
+
+Padrão identificado:
+° Madrugada (0h-1h): Pico inicial com 22,5% de atrasos às 0h, provavelmente voos atrasados do dia anterior
+° Melhor período (4h-6h): Taxa mínima de 8,3% às 5h da manhã
+° Deterioração progressiva: A partir das 7h, os atrasos crescem continuamente
+° Pior período (22h-23h): Pico de 25,8-26,0% de atrasos no final do dia
+
+Conclusão: Voos matinais (5h-7h) têm melhor pontualidade. O atraso acumulado ao longo do dia afeta principalmente voos noturnos.
+_______________________________________________________________________________
+
+3. Companhia com Melhor Pontualidade e Menor Taxa de Cancelamento
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+Pontualidade e Cancelamento por Companhia
+
+Companhia						Voos		% Pontuais	% Cancelados	Atraso Médio (min)
+GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)	259,3 mil	86.06%		1.13%		4,7
+AZUL LINHAS AÉREAS BRASILEIRAS S/A			284,1 mil	85.79%		1.55%		4,4
+AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)		14,5 mil	84.4%		14.35%		5,4
+LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)		14,0 mil	81.92%		0.64%		7,5
+TAM LINHAS AÉREAS S.A.					302,1 mil	80.4%		1.49%		6,6
+TAP - TRANSPORTES AÉREOS PORTUGUESES S/A		10,4 mil	59.23%		1.43%		18,2
+
+Source: Pontualidade e cancelamento por companhia
+
+
+3.1 Companhia com Maior Pontualidade
+GOL lidera com 86,06% de pontualidade, seguida de perto pela Azul (85,79%). 5
+
+3.2 Companhia com Menor Taxa de Cancelamento
+LATAM Airlines Group apresenta a menor taxa de cancelamento (0,64%), seguida pela GOL (1,13%) e TAP (1,43%).
+
+3.3 Melhor Recomendação Geral
+GOL Linhas Aéreas é a melhor recomendação geral, pois:
+
+° Maior pontualidade: 86,06% (1º lugar)
+° Baixa taxa de cancelamento: 1,13% (2º lugar, apenas 0,49 p.p. acima da líder)
+° Volume robusto: 259.303 voos analisados
+° Atraso médio baixo: 4,67 minutos
+
+Critério de desempate: Priorizamos pontualidade como métrica principal, pois impacta diretamente a experiência do passageiro. A diferença de cancelamento entre GOL e LATAM é marginal (0,49 p.p.), enquanto a diferença de pontualidade entre GOL e LATAM é significativa (4,14 p.p.).
+
+Filtros aplicados: Companhias com volume mínimo de 10.000 voos.
+_______________________________________________________________________________
+
+4. Voos Internacionais vs Domésticos
+Comparação Geral
+Sim, voos internacionais atrasam significativamente mais que domésticos: 6
+
+SELECT
+  escopo_voo,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  escopo_voo
+ORDER BY
+  voos DESC
+
+Comparação: Voos Domésticos vs Internacionais
+
+Source: Comparação doméstico vs internacional
+Escopo		% Atrasados	Atraso Médio	% Cancelados
+Doméstico	15,86%		5,1 min		1,72%
+Internacional	25,37%		19,4 min	7,70%
+Diferença	+9,51 p.p.	+14,3 min	+5,98 p.p.
+
+Voos internacionais têm 60% mais atrasos e 4,5x mais cancelamentos que domésticos.			
+
+
+Aeroportos com Maior Diferença
+
+WITH aeroporto_escopo AS (
+  SELECT
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo,
+    COUNT(*) AS voos,
+    ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+    ROUND(
+      100.0
+        * try_divide(
+          SUM(
+            CASE
+              WHEN partida_pontual = false THEN 1
+              ELSE 0
+            END
+          ),
+          SUM(
+            CASE
+              WHEN partida_pontual IS NOT NULL THEN 1
+              ELSE 0
+            END
+          )
+        ),
+      2
+    ) AS pct_atrasados
+  FROM
+    `voebem`.`gold`.`obt_voos`
+  WHERE
+    pais_origem = 'Brasil'
+  GROUP BY
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo
+  HAVING
+    COUNT(*) >= 1000
+),
+aeroporto_diff AS (
+  SELECT
+    d.nome_aeroporto_origem,
+    d.municipio_origem,
+    d.uf_origem,
+    d.voos AS voos_domesticos,
+    d.pct_atrasados AS pct_atrasados_domestico,
+    i.voos AS voos_internacionais,
+    i.pct_atrasados AS pct_atrasados_internacional,
+    ROUND(i.pct_atrasados - d.pct_atrasados, 2) AS diferenca_pct_atrasados
+  FROM
+    aeroporto_escopo d
+      INNER JOIN aeroporto_escopo i
+        ON d.nome_aeroporto_origem = i.nome_aeroporto_origem
+        AND d.escopo_voo = 'Domestico'
+        AND i.escopo_voo = 'Internacional'
+)
+SELECT
+  *
+FROM
+  aeroporto_diff
+ORDER BY
+  diferenca_pct_atrasados DESC
+LIMIT 15
+
+Aeroportos com Maior Diferença de Atraso: Internacional vs Doméstico
+
+Source: Aeroportos com maior diferença de atraso entre internacional e doméstico
+
+Os aeroportos onde a diferença é mais acentuada: 7
+1. Viracopos (Campinas): +17,5 p.p. (33,9% internacional vs 16,4% doméstico)
+2. Afonso Pena (Curitiba): +14,0 p.p. (28,0% vs 13,9%)
+3. Salvador: +11,9 p.p. (23,6% vs 11,7%)
+4. Fortaleza: +9,2 p.p. (22,1% vs 13,0%)
+5. Manaus: +8,7 p.p. (22,8% vs 14,1%)
+
+Exceção notável: Guarulhos apresenta diferença negativa (-2,7 p.p.), com voos domésticos mais atrasados (27,9%) que internacionais (25,2%), provavelmente devido ao alto volume de conexões domésticas.
+
+Filtros aplicados: Aeroportos brasileiros com mínimo de 1.000 voos por escopo.
+_______________________________________________________________________________
+
+5. Recuperação de Atraso em Voo
+
+Quanto as Companhias Recuperam
+
+Recuperação de Atraso em Voo por Companhia
+
+Source: Recuperação de atraso em voo por companhia
+
+TAP lidera a recuperação com média de 9,8 minutos recuperados por voo, seguida por GOL (4,5 min) e Azul Conecta (3,2 min). 8
+
+Ranking de recuperação:
+1. TAP: 9,8 min (sai com 18,2 min de atraso, chega com 8,5 min)
+2. GOL: 4,5 min (sai com 4,7 min, chega com 0,1 min)
+3. Azul Conecta: 3,2 min
+4. TAM: 3,2 min
+5. Azul: 2,6 min
+6. LATAM: 2,3 min
+
+Rotas Onde a Recuperação Não Acontece
+As rotas com pior recuperação (onde o atraso aumenta em voo): 9
+1. Campo Grande → Guarulhos: -4,2 min (sai com 4,4 min, chega com 8,5 min)
+2. Florianópolis → Guarulhos: -1,1 min
+3. Navegantes → Guarulhos: -1,0 min
+4. Goiânia → Guarulhos: -0,3 min
+
+Padrão identificado: Rotas curtas com destino a Guarulhos tendem a perder tempo em vez de recuperar, provavelmente devido a congestionamento no aeroporto de destino.
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+_______________________________________________________________________________
+
+6. Companhias Mais Recomendadas por Escopo
+
+Voos Domésticos
+GOL é a mais recomendada para voos domésticos: 10
+° Pontualidade: 86,03% (1º lugar, empatada tecnicamente com Azul 86,01%)
+° Cancelamento: 1,15% (melhor entre as grandes)
+° Volume: 241.561 voos
+° Atraso médio: 4,67 minutos
+
+Azul é alternativa equivalente (86,01% pontualidade, 1,54% cancelamento).
+
+Critério: GOL vence por margem mínima em pontualidade (0,02 p.p.) e melhor taxa de cancelamento (0,39 p.p. menor que Azul).
+
+
+Voos Internacionais
+° Copa Airlines é a mais recomendada para voos internacionais: 11
+° Pontualidade: 91,72% (líder absoluta)
+° Cancelamento: 2,88%
+° Volume: 9.546 voos
+° Atraso médio: 0,52 minutos
+
+Alternativas de qualidade:
+° British Airways: 87,89% pontualidade, 1,37% cancelamento
+° GOL (internacional): 86,46% pontualidade, 0,96% cancelamento (melhor em cancelamento)
+
+Critério: Copa Airlines apresenta pontualidade superior (+4,8 p.p. sobre a 2ª colocada) que compensa a taxa de cancelamento ligeiramente maior.
+
+Filtros aplicados: Companhias com mínimo de 10.000 voos (doméstico) ou 1.000 voos (internacional).
+_______________________________________________________________________________
+
+7. Companhias Menos Recomendadas por Escopo
+
+Voos Domésticos
+TAM Linhas Aéreas é a menos recomendada entre as grandes companhias domésticas:
+° Pontualidade: 80,89% (última entre as 4 principais)
+° Cancelamento: 1,55%
+° Volume: 277.279 voos
+° Atraso médio: 6,18 minutos
+
+Diferença para a líder (GOL): -5,14 p.p. em pontualidade.
+
+Ressalva: TAM ainda opera acima de 80% de pontualidade, mas fica consistentemente atrás de GOL e Azul.
+
+
+Voos Internacionais
+Entre companhias com operação significativa, as menos recomendadas são:
+1. ARAJET: 44,80% pontualidade, 73,79% cancelamento (2.026 voos)
+2. Ethiopian Airlines: 40,48% pontualidade, 45,05% cancelamento (3.467 voos)
+
+Companhias cargueiras (TAMPA, ATLAS, CARGOLUX, LAN CARGO): pontualidade entre 21-39%, mas são operações de carga, não passageiros
+
+Para passageiros, evitar:
+° TAP: 59,23% pontualidade (pior entre companhias de passageiros com alto volume)
+° Ibéria: 56,31% pontualidade, 54,61% cancelamento
+° BOA (Boliviana): 52,44% pontualidade, 17,85% cancelamento
+
+Critério: Priorizamos companhias com volume relevante (>1.000 voos) e operação regular de passageiros.
+_______________________________________________________________________________
+
+8. Considerações Importantes Não Destacadas
+8.1 O Paradoxo de Guarulhos
+Guarulhos apresenta comportamento atípico: é o aeroporto com maior taxa de atraso em voos domésticos (27,9%), mas seus voos internacionais são menos atrasados (25,2%). 7
+Hipótese: O alto volume de conexões domésticas (103.348 voos) cria efeito cascata mais intenso que em voos internacionais, que têm janelas de tempo maiores e menos conexões apertadas.
+Implicação prática: Passageiros com conexão em Guarulhos devem considerar janelas maiores entre voos domésticos.
+
+8.2 Azul Conecta: Alta Taxa de Cancelamento
+Azul Conecta apresenta 14,35% de cancelamento - 10x maior que as principais companhias - apesar de boa pontualidade (84,4%). 5
+Justificativa: Opera rotas regionais de menor demanda com aeronaves menores, mais suscetíveis a cancelamentos por viabilidade operacional.
+Implicação: Passageiros em rotas regionais devem ter planos alternativos.
+
+
+8.3 Recuperação em Voo: Métrica Enganosa
+A recuperação média de 2-10 minutos pode parecer positiva, mas não significa chegada pontual. 8
+Exemplo: TAP recupera 9,8 minutos, mas ainda chega com 8,5 minutos de atraso médio (partiu com 18,2 min de atraso).
+Implicação: Recuperação indica eficiência operacional, mas não garante pontualidade na chegada.
+
+8.4 Volume como Fator de Confiabilidade
+Companhias com volume muito baixo (<10.000 voos) apresentam métricas menos confiáveis. Por exemplo:
+LATAM Airlines Group (internacional): 81,92% pontualidade, mas apenas 13.957 voos
+Copa Airlines: 91,72% pontualidade com 9.546 voos
+Implicação: Métricas de companhias de alto volume (GOL: 259k, Azul: 284k, TAM: 302k) são mais representativas do desempenho consistente.
+_______________________________________________________________________________
+
+Consolidação Final
+Escopo e Filtros Aplicados
+
+Análise				Escopo				Filtro de Volume	Período
+Aeroportos			Brasil (pais_origem = 'Brasil')	≥ 5.000 voos		Ago/2025 - Ago/2026
+Rotas				Todas				≥ 2.000 voos		Ago/2025 - Ago/2026
+Companhias (geral)		Todas				≥ 10.000 voos		Ago/2025 - Ago/2026
+Companhias (doméstico)		escopo_voo = 'Domestico'	≥ 10.000 voos		Ago/2025 - Ago/2026
+Companhias (internacional)	escopo_voo = 'Internacional'	≥ 1.000 voos		Ago/2025 - Ago/2026
+Aeroportos (dom vs int)		Brasil				≥ 1.000 voos/escopo	Ago/2025 - Ago/2026
+
+
+Diferenças entre Métricas
+Pontualidade: Voo é pontual quando atrasa ≤15 minutos. Voos cancelados não entram no cálculo (denominador exclui cancelados e voos sem horário programado).
+
+Taxa de Cancelamento: Percentual de voos cancelados sobre o total de voos programados (cancelados + realizados).
+
+Melhor Desempenho Geral: Combina pontualidade (peso maior) e cancelamento. GOL vence por equilibrar 86% de pontualidade com apenas 1,13% de cancelamento.
+
+Ressalvas Importantes
+1. Critério composto: "Melhor companhia geral" prioriza pontualidade, pois impacta mais passageiros (85% dos voos) que cancelamento (1-2% dos voos).
+2. Contexto de volume: Companhias com <10.000 voos têm métricas menos estáveis. Recomendações priorizaram operadores de alto volume.
+3. Recuperação ≠ Pontualidade: Recuperar atraso em voo é positivo, mas não garante chegada no horário.
+4. Efeito cascata: Atrasos acumulam ao longo do dia. Voos após 18h têm 2,5x mais atraso que voos às 5h.
+5. Internacional vs Doméstico: Diferença de 9,5 p.p. em atraso e 6 p.p. em cancelamento justifica análise separada por escopo.
+
+Sources (11)
+ 1. Visão geral dos dados
+ 2. Aeroportos brasileiros com maiores atrasos de partida
+ 3. Rotas com maiores atrasos de partida
+ 4. Evolução do atraso ao longo do dia
+ 5. Pontualidade e cancelamento por companhia
+ 6. Comparação doméstico vs internacional
+ 7. Aeroportos com maior diferença de atraso entre internacional e doméstico
+ 8. Recuperação de atraso em voo por companhia
+ 9. Rotas com menor recuperação de atraso em voo
+10. Desempenho das companhias em voos domésticos
+11. Desempenho das companhias em voos internacionais
+_______________________________________
+
+Prompt 2: acresceu as análises de pontualidade por dia da semana e por mês
+
+Mantenha a análise já gerada como base principal.
+
+Não refaça todos os itens anteriores, a menos que encontre alguma inconsistência numérica ou conceitual que torne isso necessário. Preserve os resultados, critérios, filtros e conclusões já apresentados, especialmente a separação entre:
+° companhia com maior pontualidade;
+° companhia com menor taxa de cancelamento;
+° melhor recomendação geral por critério composto.
+
+Agora acrescente ao relatório duas análises que ficaram de fora:
+
+ 9. Análise de pontualidade por dia da semana
+  ° Calcule, para cada dia da semana, a quantidade de voos, percentual de voos atrasados, atraso médio em minutos e taxa de cancelamento.
+  ° Identifique o melhor e o pior dia da semana.
+  ° Explique se existe padrão operacional relevante, como acúmulo de atrasos ao longo da semana.
+  ° Informe claramente os filtros usados, o período analisado e o denominador das métricas.
+
+10. Análise de pontualidade por mês
+  ° Calcule, para cada mês do período analisado, a quantidade de voos, percentual de voos atrasados, atraso médio em minutos e taxa de cancelamento.
+  ° Identifique meses fora do padrão, picos de atraso ou cancelamento e possíveis efeitos sazonais.
+  ° Caso dezembro/2025 continue sendo um mês crítico, destaque isso com os números correspondentes.
+  ° Não invente causas externas. Se sugerir hipótese, deixe claro que é uma hipótese baseada no padrão observado.
+  ° Informe claramente os filtros usados, o período analisado e o denominador das métricas.
+
+Antes de gerar o relatório consolidado, faça uma checagem de consistência:
+1. Verifique se alguma conclusão textual contradiz tabelas ou métricas.
+2. Se houver conflito, corrija a redação, não os dados.
+3. Separe sempre métrica isolada de recomendação composta.
+4. Explique critérios de desempate quando houver empresas ou períodos com desempenho próximo.
+5. Preserve diferenças de escopo, por exemplo geral, doméstico, internacional, carga, passageiros, companhias de alto volume e companhias de baixo volume.
+
+Ao final, gere novamente o relatório completo e consolidado, como se todos os itens tivessem sido produzidos em uma única análise.
+
+O relatório final deve conter:
+
+ 1. Contexto dos dados analisados.
+ 2. Aeroportos e rotas com maiores atrasos de partida.
+ 3. Evolução do atraso ao longo do dia.
+ 4. Companhia com maior pontualidade, companhia com menor cancelamento e melhor recomendação geral.
+ 5. Comparação entre voos domésticos e internacionais.
+ 6. Recuperação de atraso em voo.
+ 7. Companhias mais recomendadas por escopo.
+ 8. Companhias menos recomendadas por escopo.
+ 9. Considerações importantes não destacadas.
+10. Análise por dia da semana.
+11. Análise por mês.
+12. Consolidação final com principais conclusões.
+13. Escopo, filtros aplicados, definições das métricas e ressalvas.
+
+Inclua tabelas e, quando possível, gráficos para as análises por dia da semana e por mês.
+Importante:
+
+° Não diga que uma companhia tem a menor taxa de cancelamento se outra tiver percentual menor.
+° Não diga que uma companhia é “melhor geral” sem explicar o critério composto.
+° Não misture companhias de passageiros com cargueiras sem indicar essa diferença.
+° Não misture voos domésticos e internacionais quando a conclusão depender do escopo.
+° Não altere resultados já corretos apenas para harmonizar a narrativa.
+
+Agora acrescente ao relatório duas análises que ficaram de fora:
+
+ 9. Análise de pontualidade por dia da semana
+  ° Calcule, para cada dia da semana, a quantidade de voos, percentual de voos atrasados, atraso médio em minutos e taxa de cancelamento.
+  ° Identifique o melhor e o pior dia da semana.
+  ° Explique se existe padrão operacional relevante, como acúmulo de atrasos ao longo da semana.
+  ° Informe claramente os filtros usados, o período analisado e o denominador das métricas.
+
+10. Análise de pontualidade por mês
+  ° Calcule, para cada mês do período analisado, a quantidade de voos, percentual de voos atrasados, atraso médio em minutos e taxa de cancelamento.
+  ° Identifique meses fora do padrão, picos de atraso ou cancelamento e possíveis efeitos sazonais.
+  ° Caso dezembro/2025 continue sendo um mês crítico, destaque isso com os números correspondentes.
+  ° Não invente causas externas. Se sugerir hipótese, deixe claro que é uma hipótese baseada no padrão observado.
+  ° Informe claramente os filtros usados, o período analisado e o denominador das métricas.
+
+Antes de gerar o relatório consolidado, faça uma checagem de consistência:
+1. Verifique se alguma conclusão textual contradiz tabelas ou métricas.
+2. Se houver conflito, corrija a redação, não os dados.
+3. Separe sempre métrica isolada de recomendação composta.
+4. Explique critérios de desempate quando houver empresas ou períodos com desempenho próximo.
+5. Preserve diferenças de escopo, por exemplo geral, doméstico, internacional, carga, passageiros, companhias de alto volume e companhias de baixo volume.
+
+Ao final, gere novamente o relatório completo e consolidado, como se todos os itens tivessem sido produzidos em uma única análise.
+
+O relatório final deve conter:
+ 1. Contexto dos dados analisados.
+ 2. Aeroportos e rotas com maiores atrasos de partida.
+ 3. Evolução do atraso ao longo do dia.
+ 4. Companhia com maior pontualidade, companhia com menor cancelamento e melhor recomendação geral.
+ 5. Comparação entre voos domésticos e internacionais.
+ 6. Recuperação de atraso em voo.
+ 7. Companhias mais recomendadas por escopo.
+ 8. Companhias menos recomendadas por escopo.
+ 9. Considerações importantes não destacadas.
+10. Análise por dia da semana.
+11. Análise por mês.
+12. Consolidação final com principais conclusões.
+13. Escopo, filtros aplicados, definições das métricas e ressalvas.
+
+Inclua tabelas e, quando possível, gráficos para as análises por dia da semana e por mês.
+Importante:
+° Não diga que uma companhia tem a menor taxa de cancelamento se outra tiver percentual menor.
+° Não diga que uma companhia é “melhor geral” sem explicar o critério composto.
+° Não misture companhias de passageiros com cargueiras sem indicar essa diferença.
+° Não misture voos domésticos e internacionais quando a conclusão depender do escopo.
+° Não altere resultados já corretos apenas para harmonizar a narrativa.
+
+
+Thought process
+Vou executar as análises adicionais solicitadas (dia da semana e mês) e depois gerar o relatório consolidado completo.
+
+Pontualidade por dia da semana
+Used tables: obt_voos
+
+SELECT
+  dia_semana,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  dia_semana IS NOT NULL
+GROUP BY
+  dia_semana
+ORDER BY
+  CASE dia_semana
+    WHEN 'domingo' THEN 1
+    WHEN 'segunda' THEN 2
+    WHEN 'terca' THEN 3
+    WHEN 'quarta' THEN 4
+    WHEN 'quinta' THEN 5
+    WHEN 'sexta' THEN 6
+    WHEN 'sabado' THEN 7
+  END
+
+|dia_semana|voos|atraso_medio_min|pct_atrasados|pct_cancelados|
+|---|---|---|---|---|
+|domingo|134,964|6.82|15.74|2.56|
+|segunda|143,735|7.47|17.21|2.89|
+|terca|142,302|7.02|17.03|3.08|
+|quarta|142,974|8.12|18.15|3.1|
+|quinta|143,324|9.02|19.2|3.11|
+|sexta|146,898|8.13|19.49|3.14|
+|sabado|129,669|6.51|15.46|2.81|
+
+
+Pontualidade por mês
+Used tables: obt_voos
+
+SELECT
+  DATE_FORMAT(mes_referencia, 'yyyy-MM') AS mes,
+  mes_referencia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  mes_referencia IS NOT NULL
+GROUP BY
+  mes_referencia,
+  DATE_FORMAT(mes_referencia, 'yyyy-MM')
+ORDER BY
+  mes_referencia
+
+|mes|mes_referencia|voos|atraso_medio_min|pct_atrasados|pct_cancelados|
+|---|---|---|---|---|---|
+|2025-08|2025-08-01T00:00:00.000+00:00|82,835|5.31|14.03|2.17|
+|2025-09|2025-09-01T00:00:00.000+00:00|80,150|5.5|14.28|2.3|
+|2025-10|2025-10-01T00:00:00.000+00:00|82,616|6.5|16.42|2.46|
+|2025-11|2025-11-01T00:00:00.000+00:00|78,320|8.01|18.11|2.37|
+|2025-12|2025-12-01T00:00:00.000+00:00|85,450|15.04|27.97|4.01|
+|2026-01|2026-01-01T00:00:00.000+00:00|88,964|8.66|18.49|3.17|
+|2026-02|2026-02-01T00:00:00.000+00:00|77,134|8.02|17.66|3.08|
+|2026-03|2026-03-01T00:00:00.000+00:00|84,642|6.15|15.04|3.1|
+|2026-04|2026-04-01T00:00:00.000+00:00|78,132|7.44|17.54|3.02|
+|2026-05|2026-05-01T00:00:00.000+00:00|79,860|5.31|15.03|2.99|
+|2026-06|2026-06-01T00:00:00.000+00:00|78,806|8.03|18.62|3.67|
+|2026-07|2026-07-01T00:00:00.000+00:00|86,940|7.09|16.78|3.14|
+|2026-08|2026-08-01T00:00:00.000+00:00|17|78.08|46.15|23.53|
+
+
+Agora vou criar as visualizações para as novas análises
+
+Agora vou gerar o relatório consolidado completo com todas as análises
+
+
+Análise Completa de Pontualidade e Atrasos de Voos no Brasil
+Contexto dos Dados
+A análise cobre 1.014.664 voos de 118 companhias aéreas operando em 3.104 rotas no período de agosto/2025 a agosto/2026. 1
+_______________________________________________________________________________
+
+1. Aeroportos e Rotas com Maiores Atrasos de Partida
+Aeroportos Brasileiros
+Guarulhos (São Paulo) lidera com 27,1% de voos atrasados, seguido por Congonhas (19,4%) e Viracopos (17,7%). 2
+
+SELECT
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  pais_origem = 'Brasil'
+GROUP BY
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem
+HAVING
+  COUNT(*) >= 5000
+ORDER BY
+  pct_atrasados DESC
+LIMIT 15
+
+Top 10 Aeroportos Brasileiros com Maiores Atrasos de Partida
+
+Source: Aeroportos brasileiros com maiores atrasos de partida
+
+Principais achados:
+° Guarulhos concentra o maior volume (147.968 voos) e a maior taxa de atraso entre aeroportos de grande porte
+° O atraso médio em Guarulhos é de 13,4 minutos
+° Aeroportos menores como Campo Grande (15,7%) e Uberlândia (15,4%) também apresentam taxas elevadas
+
+Filtros aplicados: Aeroportos brasileiros (pais_origem = 'Brasil') com volume mínimo de 5.000 voos.
+
+Rotas com Maiores Atrasos
+As rotas partindo de Guarulhos dominam o ranking de atrasos: 3
+1. Guarulhos → Fortaleza: 36,6% atrasados (3.924 voos)
+2. Guarulhos → Manaus: 35,7% atrasados (2.887 voos)
+3. Miami → Guarulhos: 34,6% atrasados (2.260 voos) - rota internacional
+4. Guarulhos → Belém: 33,6% atrasados (2.825 voos)
+5. Guarulhos → Santiago (SCEL): 32,9% atrasados (5.361 voos)
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+_______________________________________________________________________________
+
+2. Evolução do Atraso ao Longo do Dia
+
+O efeito cascata é evidente: atrasos aumentam progressivamente durante o dia. 4
+
+SELECT
+  hora_partida_prevista AS hora,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  hora_partida_prevista IS NOT NULL
+GROUP BY
+  hora_partida_prevista
+ORDER BY
+  hora_partida_prevista
+
+Evolução do Atraso ao Longo do Dia
+
+Source: Evolução do atraso ao longo do dia
+
+
+Padrão identificado:
+° Madrugada (0h-1h): Pico inicial com 22,5% de atrasos às 0h, provavelmente voos atrasados do dia anterior
+° Melhor período (4h-6h): Taxa mínima de 8,3% às 5h da manhã
+° Deterioração progressiva: A partir das 7h, os atrasos crescem continuamente
+° Pior período (22h-23h): Pico de 25,8-26,0% de atrasos no final do dia
+
+Conclusão: Voos matinais (5h-7h) têm melhor pontualidade. O atraso acumulado ao longo do dia afeta principalmente voos noturnos.
+_______________________________________________________________________________
+
+3. Companhia com Melhor Pontualidade e Menor Taxa de Cancelamento
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+Pontualidade e Cancelamento por Companhia
+
+Companhia						Voos		% Pontuais	% Cancelados	Atraso Médio (min)
+GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)	259,3 mil	86.06%		1.13%		4,7
+AZUL LINHAS AÉREAS BRASILEIRAS S/A			284,1 mil	85.79%		1.55%		4,4
+AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)		14,5 mil	84.4%		14.35%		5,4
+LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)		14,0 mil	81.92%		0.64%		7,5
+TAM LINHAS AÉREAS S.A.					302,1 mil	80.4%		1.49%		6,6
+TAP - TRANSPORTES AÉREOS PORTUGUESES S/A		10,4 mil	59.23%		1.43%		18,2
+
+Source: Pontualidade e cancelamento por companhia
+
+
+3.1 Companhia com Maior Pontualidade
+GOL lidera com 86,06% de pontualidade, seguida de perto pela Azul (85,79%). 5
+
+3.2 Companhia com Menor Taxa de Cancelamento
+LATAM Airlines Group apresenta a menor taxa de cancelamento (0,64%), seguida pela GOL (1,13%) e TAP (1,43%).
+
+3.3 Melhor Recomendação Geral
+GOL Linhas Aéreas é a melhor recomendação geral, pois:
+
+° Maior pontualidade: 86,06% (1º lugar)
+° Baixa taxa de cancelamento: 1,13% (2º lugar, apenas 0,49 p.p. acima da líder)
+° Volume robusto: 259.303 voos analisados
+° Atraso médio baixo: 4,67 minutos
+
+Critério de desempate: Priorizamos pontualidade como métrica principal, pois impacta diretamente a experiência do passageiro. A diferença de cancelamento entre GOL e LATAM é marginal (0,49 p.p.), enquanto a diferença de pontualidade entre GOL e LATAM é significativa (4,14 p.p.).
+
+Filtros aplicados: Companhias com volume mínimo de 10.000 voos.
+_______________________________________________________________________________
+
+4. Voos Internacionais vs Domésticos
+
+Comparação Geral
+Sim, voos internacionais atrasam significativamente mais que domésticos: 6
+
+SELECT
+  escopo_voo,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  escopo_voo
+ORDER BY
+  voos DESC
+
+Comparação: Voos Domésticos vs Internacionais
+
+Source: Comparação doméstico vs internacional
+
+Escopo		% Atrasados	Atraso Médio	% Cancelados
+Doméstico	15,86%		5,1 min		1,72%
+Internacional	25,37%		19,4 min	7,70%
+Diferença	+9,51 p.p.	+14,3 min	+5,98 p.p.
+Voos internacionais têm 60% mais atrasos e 4,5x mais cancelamentos que domésticos.
+
+
+Aeroportos com Maior Diferença
+
+WITH aeroporto_escopo AS (
+  SELECT
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo,
+    COUNT(*) AS voos,
+    ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+    ROUND(
+      100.0
+        * try_divide(
+          SUM(
+            CASE
+              WHEN partida_pontual = false THEN 1
+              ELSE 0
+            END
+          ),
+          SUM(
+            CASE
+              WHEN partida_pontual IS NOT NULL THEN 1
+              ELSE 0
+            END
+          )
+        ),
+      2
+    ) AS pct_atrasados
+  FROM
+    `voebem`.`gold`.`obt_voos`
+  WHERE
+    pais_origem = 'Brasil'
+  GROUP BY
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo
+  HAVING
+    COUNT(*) >= 1000
+),
+aeroporto_diff AS (
+  SELECT
+    d.nome_aeroporto_origem,
+    d.municipio_origem,
+    d.uf_origem,
+    d.voos AS voos_domesticos,
+    d.pct_atrasados AS pct_atrasados_domestico,
+    i.voos AS voos_internacionais,
+    i.pct_atrasados AS pct_atrasados_internacional,
+    ROUND(i.pct_atrasados - d.pct_atrasados, 2) AS diferenca_pct_atrasados
+  FROM
+    aeroporto_escopo d
+      INNER JOIN aeroporto_escopo i
+        ON d.nome_aeroporto_origem = i.nome_aeroporto_origem
+        AND d.escopo_voo = 'Domestico'
+        AND i.escopo_voo = 'Internacional'
+)
+SELECT
+  *
+FROM
+  aeroporto_diff
+ORDER BY
+  diferenca_pct_atrasados DESC
+LIMIT 15
+
+Aeroportos com Maior Diferença de Atraso: Internacional vs Doméstico
+
+Source: Aeroportos com maior diferença de atraso entre internacional e doméstico
+
+Os aeroportos onde a diferença é mais acentuada: 7
+1. Viracopos (Campinas): +17,5 p.p. (33,9% internacional vs 16,4% doméstico)
+2. Afonso Pena (Curitiba): +14,0 p.p. (28,0% vs 13,9%)
+3. Salvador: +11,9 p.p. (23,6% vs 11,7%)
+4. Fortaleza: +9,2 p.p. (22,1% vs 13,0%)
+5. Manaus: +8,7 p.p. (22,8% vs 14,1%)
+
+Exceção notável: Guarulhos apresenta diferença negativa (-2,7 p.p.), com voos domésticos mais atrasados (27,9%) que internacionais (25,2%), provavelmente devido ao alto volume de conexões domésticas.
+
+Filtros aplicados: Aeroportos brasileiros com mínimo de 1.000 voos por escopo.
+_______________________________________________________________________________
+
+5. Recuperação de Atraso em Voo
+
+Quanto as Companhias Recuperam
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_saida_min,
+  ROUND(AVG(atraso_chegada_min), 2) AS atraso_chegada_min,
+  ROUND(AVG(minutos_recuperados), 2) AS recuperados_medio_min
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  minutos_recuperados IS NOT NULL
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  recuperados_medio_min DESC
+
+Recuperação de Atraso em Voo por Companhia
+
+Source: Recuperação de atraso em voo por companhia
+
+TAP lidera a recuperação com média de 9,8 minutos recuperados por voo, seguida por GOL (4,5 min) e Azul Conecta (3,2 min). 8
+
+Ranking de recuperação:
+1. TAP: 9,8 min (sai com 18,2 min de atraso, chega com 8,5 min)
+2. GOL: 4,5 min (sai com 4,7 min, chega com 0,1 min)
+3. Azul Conecta: 3,2 min
+4. TAM: 3,2 min
+5. Azul: 2,6 min
+6. LATAM: 2,3 min
+
+Rotas Onde a Recuperação Não Acontece
+As rotas com pior recuperação (onde o atraso aumenta em voo): 9
+1. Campo Grande → Guarulhos: -4,2 min (sai com 4,4 min, chega com 8,5 min)
+2. Florianópolis → Guarulhos: -1,1 min
+3. Navegantes → Guarulhos: -1,0 min
+4. Goiânia → Guarulhos: -0,3 min
+
+Padrão identificado: Rotas curtas com destino a Guarulhos tendem a perder tempo em vez de recuperar, provavelmente devido a congestionamento no aeroporto de destino.
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+_______________________________________________________________________________
+
+6. Companhias Mais Recomendadas por Escopo
+
+Voos Domésticos
+GOL é a mais recomendada para voos domésticos: 10
+° Pontualidade: 86,03% (1º lugar, empatada tecnicamente com Azul 86,01%)
+° Cancelamento: 1,15% (melhor entre as grandes)
+° Volume: 241.561 voos
+° Atraso médio: 4,67 minutos
+
+Azul é alternativa equivalente (86,01% pontualidade, 1,54% cancelamento).
+
+Critério: GOL vence por margem mínima em pontualidade (0,02 p.p.) e melhor taxa de cancelamento (0,39 p.p. menor que Azul).
+
+
+Voos Internacionais
+Copa Airlines é a mais recomendada para voos internacionais: 11
+° Pontualidade: 91,72% (líder absoluta)
+° Cancelamento: 2,88%
+° Volume: 9.546 voos
+° Atraso médio: 0,52 minutos
+
+Alternativas de qualidade:
+° British Airways: 87,89% pontualidade, 1,37% cancelamento
+° GOL (internacional): 86,46% pontualidade, 0,96% cancelamento (melhor em cancelamento)
+
+Critério: Copa Airlines apresenta pontualidade superior (+4,8 p.p. sobre a 2ª colocada) que compensa a taxa de cancelamento ligeiramente maior.
+
+Filtros aplicados: Companhias com mínimo de 10.000 voos (doméstico) ou 1.000 voos (internacional).
+_______________________________________________________________________________
+
+7. Companhias Menos Recomendadas por Escopo
+
+Voos Domésticos
+TAM Linhas Aéreas é a menos recomendada entre as grandes companhias domésticas:
+° Pontualidade: 80,89% (última entre as 4 principais)
+° Cancelamento: 1,55%
+° Volume: 277.279 voos
+° Atraso médio: 6,18 minutos
+
+Diferença para a líder (GOL): -5,14 p.p. em pontualidade.
+
+Ressalva: TAM ainda opera acima de 80% de pontualidade, mas fica consistentemente atrás de GOL e Azul.
+
+
+Voos Internacionais
+Entre companhias com operação significativa, as menos recomendadas são:
+1. ARAJET: 44,80% pontualidade, 73,79% cancelamento (3.026 voos)
+2. Ethiopian Airlines: 40,48% pontualidade, 45,05% cancelamento (3.467 voos)
+
+Companhias cargueiras (TAMPA, ATLAS, CARGOLUX, LAN CARGO): pontualidade entre 21-39%, mas são operações de carga, não passageiros
+
+Para passageiros, evitar:
+° TAP: 59,23% pontualidade (pior entre companhias de passageiros com alto volume)
+° Ibéria: 56,31% pontualidade, 54,61% cancelamento
+° BOA (Boliviana): 52,44% pontualidade, 17,85% cancelamento
+
+Critério: Priorizamos companhias com volume relevante (>1.000 voos) e operação regular de passageiros.
+_______________________________________________________________________________
+
+8. Considerações Importantes Não Destacadas
+8.1 O Paradoxo de Guarulhos
+Guarulhos apresenta comportamento atípico: é o aeroporto com maior taxa de atraso em voos domésticos (27,9%), mas seus voos internacionais são menos atrasados (25,2%). 7
+Hipótese: O alto volume de conexões domésticas (103.348 voos) cria efeito cascata mais intenso que em voos internacionais, que têm janelas de tempo maiores e menos conexões apertadas.
+Implicação prática: Passageiros com conexão em Guarulhos devem considerar janelas maiores entre voos domésticos.
+
+8.2 Azul Conecta: Alta Taxa de Cancelamento
+Azul Conecta apresenta 14,35% de cancelamento - 10x maior que as principais companhias - apesar de boa pontualidade (84,4%). 5
+Justificativa: Opera rotas regionais de menor demanda com aeronaves menores, mais suscetíveis a cancelamentos por viabilidade operacional.
+Implicação: Passageiros em rotas regionais devem ter planos alternativos.
+
+8.3 Recuperação em Voo: Métrica Enganosa
+A recuperação média de 2-10 minutos pode parecer positiva, mas não significa chegada pontual. 8
+Exemplo: TAP recupera 9,8 minutos, mas ainda chega com 8,5 minutos de atraso médio (partiu com 18,2 min de atraso).
+Implicação: Recuperação indica eficiência operacional, mas não garante pontualidade na chegada.
+
+8.4 Volume como Fator de Confiabilidade
+Companhias com volume muito baixo (<10.000 voos) apresentam métricas menos confiáveis. Por exemplo:
+LATAM Airlines Group (internacional): 81,92% pontualidade, mas apenas 13.957 voos
+Copa Airlines: 91,72% pontualidade com 9.546 voos
+Implicação: Métricas de companhias de alto volume (GOL: 259k, Azul: 284k, TAM: 302k) são mais representativas do desempenho consistente.
+_______________________________________________________________________________
+
+9. Análise de Pontualidade por Dia da Semana
+
+Desempenho Semanal
+SELECT
+  dia_semana,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  dia_semana IS NOT NULL
+GROUP BY
+  dia_semana
+ORDER BY
+  CASE dia_semana
+    WHEN 'domingo' THEN 1
+    WHEN 'segunda' THEN 2
+    WHEN 'terca' THEN 3
+    WHEN 'quarta' THEN 4
+    WHEN 'quinta' THEN 5
+    WHEN 'sexta' THEN 6
+    WHEN 'sabado' THEN 7
+  END
+
+Pontualidade por Dia da Semana
+
+Source: Pontualidade por dia da semana
+
+
+SELECT
+  dia_semana,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  dia_semana IS NOT NULL
+GROUP BY
+  dia_semana
+ORDER BY
+  CASE dia_semana
+    WHEN 'domingo' THEN 1
+    WHEN 'segunda' THEN 2
+    WHEN 'terca' THEN 3
+    WHEN 'quarta' THEN 4
+    WHEN 'quinta' THEN 5
+    WHEN 'sexta' THEN 6
+    WHEN 'sabado' THEN 7
+  END
+
+Desempenho Semanal: Atrasos e Cancelamentos
+
+Dia da Semana	Voos		% Atrasados	Atraso Médio (min)	% Cancelados
+domingo		135,0 mil	15.74%		6,8			2.56%
+segunda		143,7 mil	17.21%		7,5			2.89%
+terca		142,3 mil	17.03%		7			3.08%
+quarta		143,0 mil	18.15%		8,1			3.1%
+quinta		143,3 mil	19.2%		9			3.11%
+sexta		146,9 mil	19.49%		8,1			3.14%
+sabado		129,7 mil	15.46%		6,5			2.81%
+
+Source: Pontualidade por dia da semana
+
+Padrão semanal claro: Os atrasos aumentam progressivamente de domingo a sexta, com recuperação no sábado. 12
+
+
+Melhor e Pior Dia
+Melhor dia: Sábado
+º 15,46% de voos atrasados (menor taxa da semana)
+º 6,51 minutos de atraso médio
+º 2,81% de cancelamento
+º 129.669 voos (menor volume da semana)
+
+Pior dia: Sexta-feira
+º 19,49% de voos atrasados (maior taxa da semana)
+º 8,13 minutos de atraso médio
+º 3,14% de cancelamento
+º 146.898 voos (maior volume da semana)
+
+Padrão Operacional: Acúmulo Semanal
+Existe um claro efeito de acúmulo ao longo da semana:
+1. Domingo: 15,74% atrasados - início da semana operacional com sistema "limpo"
+2. Segunda a Quinta: Deterioração progressiva (17,21% → 17,03% → 18,15% → 19,20%)
+3. Sexta: Pico de 19,49% - acúmulo máximo + maior volume
+4. Sábado: Recuperação para 15,46% - menor volume permite "reset" do sistema
+
+Diferença entre melhor e pior dia: 4,03 pontos percentuais (26% de variação relativa).
+
+Hipótese baseada no padrão observado: O sistema aeroportuário brasileiro opera com margem operacional apertada. Atrasos de segunda-feira se propagam e acumulam durante a semana, atingindo o pico na sexta-feira (maior demanda). O sábado, com 13% menos voos, permite que o sistema se recupere antes do domingo.
+
+Filtros aplicados: Todos os voos com dia_semana não nulo. Período: agosto/2025 a agosto/2026.
+
+Denominador das métricas:
+° % atrasados: voos com partida_pontual não nulo (exclui cancelados e sem horário programado)
+° % cancelados: total de voos programados
+_______________________________________________________________________________
+
+10. Análise de Pontualidade por Mês
+
+Desempenho Mensal
+
+SELECT
+  DATE_FORMAT(mes_referencia, 'yyyy-MM') AS mes,
+  mes_referencia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  mes_referencia IS NOT NULL
+GROUP BY
+  mes_referencia,
+  DATE_FORMAT(mes_referencia, 'yyyy-MM')
+ORDER BY
+  mes_referencia
+
+Pontualidade por Mês (Ago/2025 - Jul/2026)
+
+Source: Pontualidade por mês
+
+
+SELECT
+  DATE_FORMAT(mes_referencia, 'yyyy-MM') AS mes,
+  mes_referencia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  mes_referencia IS NOT NULL
+GROUP BY
+  mes_referencia,
+  DATE_FORMAT(mes_referencia, 'yyyy-MM')
+ORDER BY
+  mes_referencia
+
+Desempenho Mensal: Atrasos e Cancelamentos
+
+Mês	Voos		% Atrasados	Atraso Médio (min)	% Cancelados
+2025-08	82,8 mil	14.03%		5,3			2.17%
+2025-09	80,2 mil	14.28%		5,5			2.3%
+2025-10	82,6 mil	16.42%		6,5			2.46%
+2025-11	78,3 mil	18.11%		8			2.37%
+2025-12	85,5 mil	27.97%		15			4.01%
+2026-01	89,0 mil	18.49%		8,7			3.17%
+2026-02	77,1 mil	17.66%		8			3.08%
+2026-03	84,6 mil	15.04%		6,2			3.1%
+2026-04	78,1 mil	17.54%		7,4			3.02%
+2026-05	79,9 mil	15.03%		5,3			2.99%
+2026-06	78,8 mil	18.62%		8			3.67%
+2026-07	86,9 mil	16.78%		7,1			3.14%
+2026-08	17,0		46.15%		78,1			23.53%
+
+Source: Pontualidade por mês
+
+
+Dezembro/2025: Mês Crítico
+
+Dezembro/2025 é um outlier extremo: 13
+° 27,97% de voos atrasados - quase o dobro da média geral (17%)
+° 15,04 minutos de atraso médio - 2,8x a média dos outros meses
+° 4,01% de cancelamento - 74% acima da média anual
+° 85.450 voos - volume normal, não explica o problema
+
+Comparação com outros meses:
+° Agosto/2025: 14,03% atrasados, 5,31 min de atraso
+° Janeiro/2026: 18,49% atrasados, 8,66 min de atraso (recuperação pós-dezembro)
+° Média dos demais meses: ~16% atrasados, ~7 min de atraso
+
+Padrão Sazonal Identificado
+Três períodos distintos:
+1. Agosto-Setembro/2025 (início do período): Melhor desempenho (14,0-14,3% atrasados)
+2. Outubro-Novembro/2025 (pré-alta temporada): Deterioração gradual (16,4% → 18,1%)
+3. Dezembro/2025 (alta temporada): Colapso operacional (27,97% atrasados)
+4. Janeiro-Julho/2026 (pós-alta temporada): Recuperação gradual, oscilando entre 15-19%
+
+Meses Fora do Padrão
+Melhor mês: Agosto/2025
+° 14,03% atrasados
+° 5,31 min de atraso médio
+° 2,17% cancelamento
+
+Pior mês: Dezembro/2025
+° 27,97% atrasados (99% acima da média)
+° 15,04 min de atraso médio
+° 4,01% cancelamento
+
+Segundo pior: Junho/2026
+° 18,62% atrasados
+° 8,03 min de atraso médio
+° 3,67% cancelamento (segundo maior)
+
+Hipóteses Baseadas no Padrão Observado
+Para dezembro/2025:
+° Hipótese 1 (demanda sazonal): Dezembro é tradicionalmente mês de férias e festas de fim de ano no Brasil, com pico de demanda turística. O sistema pode ter operado próximo à capacidade máxima.
+° Hipótese 2 (condições meteorológicas): Dezembro é período de verão no Brasil, com maior incidência de tempestades convectivas que afetam operações aeroportuárias.
+° Hipótese 3 (efeito combinado): Alta demanda + condições meteorológicas adversas + efeito cascata criaram tempestade perfeita operacional.
+
+Para junho/2026:
+° Junho marca início das férias escolares de inverno, outro pico de demanda, mas com impacto menor que dezembro.
+
+Ressalva importante: Estas são hipóteses baseadas exclusivamente no padrão observado nos dados. Não temos informação sobre eventos externos específicos (greves, problemas de infraestrutura, condições meteorológicas reais) que possam ter causado o desempenho de dezembro/2025.
+
+Agosto/2026: Apenas 17 voos registrados (46,15% atrasados, 23,53% cancelados) - amostra insuficiente para análise, representa apenas o primeiro dia do mês.
+
+Filtros aplicados: Todos os voos com mes_referencia não nulo. Período completo: agosto/2025 a julho/2026 (excluindo agosto/2026 por volume insuficiente).
+
+Denominador das métricas:
+° % atrasados: voos com partida_pontual não nulo
+° % cancelados: total de voos programados
+_______________________________________________________________________________
+
+11. Consolidação Final: Principais Conclusões
+
+Pontos Críticos do Sistema
+
+1. Guarulhos é o gargalo operacional: 27,1% de atrasos, concentra as piores rotas, e apresenta paradoxo doméstico > internacional.
+
+2. Efeito cascata triplo:
+° Diário: Atrasos crescem de 8,3% (5h) para 26% (23h)
+° Semanal: Acúmulo de domingo (15,7%) a sexta (19,5%)
+° Sazonal: Dezembro/2025 colapsa com 28% de atrasos
+
+3. Voos internacionais são 60% mais problemáticos: 25,4% vs 15,9% de atrasos, 7,7% vs 1,7% de cancelamento.
+
+Recomendações Práticas para Passageiros
+Escolha de companhia:
+° Doméstico: GOL (86% pontual) ou Azul (86% pontual)
+° Internacional: Copa Airlines (92% pontual)
+° Evitar: TAM doméstico (81%), TAP internacional (59%)
+
+Escolha de horário:
+° Melhor: Voos entre 5h-7h (8-9% de atraso)
+° Evitar: Voos após 22h (26% de atraso)
+
+Escolha de dia:
+° Melhor: Sábado (15,5% de atraso)
+° Evitar: Sexta-feira (19,5% de atraso)
+
+Escolha de período:
+° Melhor: Agosto-Setembro (14% de atraso)
+° Evitar: Dezembro (28% de atraso)
+
+Conexões em Guarulhos:
+° Considere janela mínima de 2-3 horas para voos domésticos
+° Rotas curtas para Guarulhos tendem a perder tempo em vez de recuperar
+
+Insights Operacionais
+1. Recuperação em voo existe mas é limitada: Média de 2-10 minutos, insuficiente para compensar atrasos grandes.
+2. Volume não é desculpa: Aeroportos menores (Campo Grande, Uberlândia) também têm taxas altas de atraso.
+3. Azul Conecta: Boa pontualidade (84%) mas 14% de cancelamento - risco para rotas regionais.
+4. Sistema opera no limite: Qualquer pico de demanda (dezembro, sextas-feiras) causa deterioração significativa.
+_______________________________________________________________________________
+
+12. Escopo, Filtros e Definições das Métricas
+
+Escopo Geral
+° Período analisado: Agosto/2025 a Julho/2026 (12 meses completos)
+° Total de voos: 1.014.664
+° Companhias: 118
+° Rotas: 3.104
+° Fonte: Dados públicos VRA da ANAC via tabela voebem.gold.obt_voos
+
+
+Filtros Aplicados por Análise
+
+Análise				Filtro de Volume	Filtro de Escopo		Observações
+Aeroportos			≥ 5.000 voos		pais_origem = 'Brasil'		Apenas aeroportos brasileiros
+Rotas				≥ 2.000 voos		Todas				Inclui rotas internacionais
+Companhias (geral)		≥ 10.000 voos		Todas				Todas as companhias
+Companhias (doméstico)		≥ 10.000 voos		escopo_voo = 'Domestico'	Apenas voos domésticos
+Companhias (internacional)	≥ 1.000 voos		escopo_voo = 'Internacional'	Filtro menor por menor volume
+Aeroportos (dom vs int)		≥ 1.000 voos/escopo	pais_origem = 'Brasil'		Por escopo separadamente
+Dia da semana			Nenhum			Todos				Análise completa
+Mês				Nenhum			Todos				Exceto ago/2026 (17 voos)
+
+
+Definições das Métricas
+Pontualidade:
+° Critério: Voo é pontual quando atrasa ≤ 15 minutos
+° Cálculo: % de voos com partida_pontual = true
+° Denominador: Voos com partida_pontual não nulo (exclui cancelados e sem horário programado)
+° Importante: Voo cancelado NÃO entra no cálculo de pontualidade
+
+Atraso:
+° Definição: Diferença em minutos entre horário real e programado
+° Positivo: Voo atrasou
+° Negativo: Voo adiantou
+° Nulo: Voo cancelado, sem horário programado, ou valor fora da faixa plausível (-2h a +24h)
+
+Taxa de Cancelamento:
+° Cálculo: % de voos com voo_cancelado = true
+° Denominador: Total de voos programados (cancelados + realizados)
+
+Recuperação em Voo:
+° Definição: minutos_recuperados = atraso_partida_min - atraso_chegada_min
+° Positivo: Chegou MENOS atrasado que saiu (não significa que chegou no horário)
+° Negativo: Perdeu mais tempo depois de decolar
+° Nulo: Voo cancelado ou atraso fora da faixa plausível
+
+Escopo do Voo:
+° Doméstico: Origem e destino no Brasil
+° Internacional: Origem ou destino no exterior
+° Derivado de: codigo_tipo_linha (N/C = doméstico, I/G = internacional)
+
+Ressalvas Metodológicas
+1. Voos cancelados não têm atraso: Cancelamento é métrica separada, não entra em média de atraso nem em % de pontualidade.
+2. Denominador correto: % de atraso usa apenas voos que TÊM a métrica (partida_pontual não nulo), não o total de voos.
+3. Filtros de volume: Aplicados para garantir significância estatística. Companhias/rotas/aeroportos com volume muito baixo têm métricas menos confiáveis.
+4. Aeroportos estrangeiros: Não têm município/UF no cadastro da ANAC. Aparecem como "AEROPORTO FORA DO CADASTRO ANAC (código)".
+5. Agosto/2026: Apenas 17 voos (primeiro dia do mês), excluído das análises mensais por volume insuficiente.
+6. Companhias cargueiras: Incluídas nos dados mas separadas nas recomendações. Operam com lógica diferente de companhias de passageiros.
+7. Critério composto: "Melhor companhia geral" prioriza pontualidade (peso maior) sobre cancelamento, pois impacta mais passageiros.
+8. Hipóteses sobre causas: Quando mencionadas (dezembro/2025, efeito semanal), são baseadas exclusivamente no padrão observado nos dados, não em informações externas confirmadas.
+
+Limitações da Análise
+° Sem dados de causa raiz: Não sabemos se atrasos são por manutenção, clima, tráfego aéreo, etc.
+° Sem dados de conexões: Não conseguimos medir impacto de atrasos em conexões perdidas.
+° Sem dados de satisfação: Métricas operacionais não capturam experiência completa do passageiro.
+° Período específico: Conclusões válidas para ago/2025-jul/2026, padrões podem mudar em outros períodos.
+° Sem controle de variáveis: Não isolamos efeitos de clima, greves, eventos especiais, etc.
+
+Sources (13)
+ 1. Visão geral dos dados
+ 2. Aeroportos brasileiros com maiores atrasos de partida
+ 3. Rotas com maiores atrasos de partida
+ 4. Evolução do atraso ao longo do dia
+ 5. Pontualidade e cancelamento por companhia
+ 6. Comparação doméstico vs internacional
+ 7. Aeroportos com maior diferença de atraso entre internacional e doméstico
+ 8. Recuperação de atraso em voo por companhia
+ 9. Rotas com menor recuperação de atraso em voo
+10. Desempenho das companhias em voos domésticos
+11. Desempenho das companhias em voos internacionais
+12. Pontualidade por dia da semana
+13. Pontualidade por mês
+_______________________________________
+
+Prompt 3: ajustou  algumas informações para clarear algumas informações e evitar dubiedades
+
+A análise está boa e não precisa ser refeita integralmente.
+
+Faça apenas uma revisão pontual do relatório consolidado já gerado, corrigindo redação metodológica e consistência de denominadores, sem alterar os dados calculados corretamente.
+
+Ajustes obrigatórios:
+
+1. Escopo temporal
+   Revise a explicação do período analisado.
+   Deixe claro:
+ ° qual é o período total disponível nos dados;
+ ° qual é o período efetivamente usado nas análises consolidadas;
+ ° se agosto/2026 aparece apenas parcialmente;
+ ° que agosto/2026 deve ser tratado como amostra insuficiente, caso tenha poucos registros.
+
+Use uma redação semelhante a:
+“Os dados disponíveis cobrem agosto/2025 a agosto/2026 parcial. Para as análises mensais consolidadas, considera-se agosto/2025 a julho/2026, excluindo agosto/2026 por volume insuficiente.”
+
+2. Diferença entre total geral e totais das análises semanais/mensais
+   Verifique e explique por que o total geral de voos pode ser diferente do total usado nas análises por dia da semana ou por mês.
+Não trate isso automaticamente como erro. Explique possíveis razões metodológicas, como:
+ ° filtros aplicados;
+ ° campos nulos;
+ ° voos sem métrica de pontualidade;
+ ° voos cancelados;
+ ° denominadores diferentes;
+ ° exclusão de período parcial.
+
+Inclua uma observação metodológica curta sempre que houver diferença de total.
+
+3. Análise por dia da semana
+   Revise a frase sobre evolução semanal.
+   Não use “crescimento progressivo” ou “aumentam progressivamente” se houver pequena oscilação entre os dias.
+
+Substitua por uma redação mais precisa, como:
+“Há tendência geral de piora ao longo da semana, com pequena oscilação na terça-feira, e pico na sexta-feira.”
+
+4. Rotas envolvendo Guarulhos
+   Revise a seção de rotas.
+   Use “rotas envolvendo Guarulhos” quando houver rotas em que Guarulhos aparece como origem ou destino.
+
+Use “rotas partindo de Guarulhos” somente se todas as rotas citadas tiverem Guarulhos como origem.
+
+5. Checagem final
+   Antes de finalizar, verifique se:
+ ° nenhuma conclusão textual contradiz tabelas ou métricas;
+ ° GOL continua sendo apresentada como melhor recomendação geral, mas não como menor cancelamento;
+ ° LATAM Group continua sendo apresentada como menor taxa de cancelamento geral;
+ ° meses parciais não são tratados como meses completos;
+ ° companhias cargueiras e de passageiros continuam separadas nas recomendações;
+ ° os denominadores das métricas estão explicados.
+
+Ao final, gere novamente apenas a versão revisada do relatório consolidado, preservando os dados, tabelas e conclusões corretas já existentes.
+
+
+Thought process
+Vou fazer uma revisão pontual do relatório, focando nos ajustes metodológicos solicitados. Primeiro, vou verificar os totais para entender as diferenças.
+
+Verificação de totais - dia da semana
+Used tables: obt_voos
+
+SELECT
+  SUM(
+    CASE
+      WHEN dia_semana IS NOT NULL THEN 1
+      ELSE 0
+    END
+  ) AS voos_com_dia_semana,
+  SUM(
+    CASE
+      WHEN dia_semana IS NULL THEN 1
+      ELSE 0
+    END
+  ) AS voos_sem_dia_semana,
+  COUNT(*) AS total_voos
+FROM
+  `voebem`.`gold`.`obt_voos`
+
+|voos_com_dia_semana|voos_sem_dia_semana|total_voos|
+|---|---|---|
+|983,866|30,798|1,014,664|
+
+
+Verificação de totais - mês
+Used tables: obt_voos
+
+SELECT
+  SUM(
+    CASE
+      WHEN mes_referencia IS NOT NULL THEN 1
+      ELSE 0
+    END
+  ) AS voos_com_mes,
+  SUM(
+    CASE
+      WHEN mes_referencia IS NULL THEN 1
+      ELSE 0
+    END
+  ) AS voos_sem_mes,
+  COUNT(*) AS total_voos,
+  SUM(
+    CASE
+      WHEN
+        mes_referencia >= '2025-08-01'
+        AND mes_referencia < '2026-08-01'
+      THEN
+        1
+      ELSE 0
+    END
+  ) AS voos_ago25_jul26
+FROM
+  `voebem`.`gold`.`obt_voos`
+
+|voos_com_mes|voos_sem_mes|total_voos|voos_ago25_jul26|
+|---|---|---|---|
+|983,866|30,798|1,014,664|983,849|
+
+
+Perfeito! Agora tenho as informações necessárias. Vou gerar o relatório revisado com os ajustes metodológicos solicitados.
+
+
+Análise Completa de Pontualidade e Atrasos de Voos no Brasil
+
+Contexto dos Dados
+
+Período e Volume: Os dados disponíveis cobrem agosto/2025 a agosto/2026 parcial. O dataset completo contém 1.014.664 voos de 118 companhias aéreas operando em 3.104 rotas. 1
+
+Para as análises temporais (dia da semana e mês), utiliza-se 983.866 voos (96,9% do total) que possuem data de partida programada. Os 30.798 voos restantes (3,1%) não têm horário programado e são excluídos das análises temporais. 2
+
+Para as análises mensais consolidadas, considera-se agosto/2025 a julho/2026 (983.849 voos), excluindo agosto/2026 por volume insuficiente (apenas 17 voos = primeiro dia do mês). 3
+_______________________________________________________________________________
+
+1. Aeroportos e Rotas com Maiores Atrasos de Partida
+
+Aeroportos Brasileiros
+
+Guarulhos (São Paulo) lidera com 27,1% de voos atrasados, seguido por Congonhas (19,4%) e Viracopos (17,7%). 4
+
+SELECT
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  pais_origem = 'Brasil'
+GROUP BY
+  nome_aeroporto_origem,
+  municipio_origem,
+  uf_origem
+HAVING
+  COUNT(*) >= 5000
+ORDER BY
+  pct_atrasados DESC
+LIMIT 15
+
+Top 10 Aeroportos Brasileiros com Maiores Atrasos de Partida
+
+Source: Aeroportos brasileiros com maiores atrasos de partida
+
+Principais achados:
+° Guarulhos concentra o maior volume (147.968 voos) e a maior taxa de atraso entre aeroportos de grande porte
+° O atraso médio em Guarulhos é de 13,4 minutos
+° Aeroportos menores como Campo Grande (15,7%) e Uberlândia (15,4%) também apresentam taxas elevadas
+
+Filtros aplicados: Aeroportos brasileiros (pais_origem = 'Brasil') com volume mínimo de 5.000 voos.
+
+Rotas com Maiores Atrasos
+
+As rotas envolvendo Guarulhos dominam o ranking de atrasos: 5
+1. Guarulhos → Fortaleza: 36,6% atrasados (3.924 voos)
+2. Guarulhos → Manaus: 35,7% atrasados (2.887 voos)
+3. Miami → Guarulhos: 34,6% atrasados (2.260 voos) - rota internacional
+4. Guarulhos → Belém: 33,6% atrasados (2.825 voos)
+5. Guarulhos → Santiago (SCEL): 32,9% atrasados (5.361 voos)
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+_______________________________________________________________________________
+
+2. Evolução do Atraso ao Longo do Dia
+O efeito cascata é evidente: atrasos aumentam progressivamente durante o dia. 6
+
+SELECT
+  hora_partida_prevista AS hora,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  hora_partida_prevista IS NOT NULL
+GROUP BY
+  hora_partida_prevista
+ORDER BY
+  hora_partida_prevista
+
+Evolução do Atraso ao Longo do Dia
+
+Source: Evolução do atraso ao longo do dia
+
+
+Padrão identificado:
+° Madrugada (0h-1h): Pico inicial com 22,5% de atrasos às 0h, provavelmente voos atrasados do dia anterior
+° Melhor período (4h-6h): Taxa mínima de 8,3% às 5h da manhã
+° Deterioração progressiva: A partir das 7h, os atrasos crescem continuamente
+° Pior período (22h-23h): Pico de 25,8-26,0% de atrasos no final do dia
+
+Conclusão: Voos matinais (5h-7h) têm melhor pontualidade. O atraso acumulado ao longo do dia afeta principalmente voos noturnos.
+_______________________________________________________________________________
+
+3. Companhia com Melhor Pontualidade e Menor Taxa de Cancelamento
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = true THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_pontuais
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  pct_pontuais DESC,
+  pct_cancelados ASC
+
+Pontualidade e Cancelamento por Companhia
+
+Companhia						Voos		% Pontuais	% Cancelados	Atraso Médio (min)
+GOL LINHAS AÉREAS S.A. (EX- VRG LINHAS AÉREAS S.A.)	259,3 mil	86.06%		1.13%		4,7
+AZUL LINHAS AÉREAS BRASILEIRAS S/A			284,1 mil	85.79%		1.55%		4,4
+AZUL CONECTA LTDA. (EX TWO TAXI AEREO LTDA)		14,5 mil	84.4%		14.35%		5,4
+LATAM AIRLINES GROUP (EX - LAN AIRLINES S/A)		14,0 mil	81.92%		0.64%		7,5
+TAM LINHAS AÉREAS S.A.					302,1 mil	80.4%		1.49%		6,6
+TAP - TRANSPORTES AÉREOS PORTUGUESES S/A		10,4 mil	59.23%		1.43%		18,2
+
+Source: Pontualidade e cancelamento por companhia
+
+
+3.1 Companhia com Maior Pontualidade
+GOL lidera com 86,06% de pontualidade, seguida de perto pela Azul (85,79%). 7
+
+3.2 Companhia com Menor Taxa de Cancelamento
+LATAM Airlines Group apresenta a menor taxa de cancelamento (0,64%), seguida pela GOL (1,13%) e TAP (1,43%).
+
+3.3 Melhor Recomendação Geral
+GOL Linhas Aéreas é a melhor recomendação geral, pois:
+° Maior pontualidade: 86,06% (1º lugar)
+° Baixa taxa de cancelamento: 1,13% (2º lugar, apenas 0,49 p.p. acima da líder LATAM)
+° Volume robusto: 259.303 voos analisados
+° Atraso médio baixo: 4,67 minutos
+
+Critério de desempate: Priorizamos pontualidade como métrica principal, pois impacta diretamente a experiência do passageiro. A diferença de cancelamento entre GOL (1,13%) e LATAM (0,64%) é marginal (0,49 p.p.), enquanto a diferença de pontualidade entre GOL (86,06%) e LATAM (81,92%) é significativa (4,14 p.p.).
+
+Filtros aplicados: Companhias com volume mínimo de 10.000 voos.
+_______________________________________________________________________________
+
+4. Voos Internacionais vs Domésticos
+
+Comparação Geral
+Sim, voos internacionais atrasam significativamente mais que domésticos: 8
+
+SELECT
+  escopo_voo,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+GROUP BY
+  escopo_voo
+ORDER BY
+  voos DESC
+
+Comparação: Voos Domésticos vs Internacionais 
+
+Source: Comparação doméstico vs internacional
+
+Escopo		% Atrasados	Atraso Médio	% Cancelados
+Doméstico	15,86%		5,1 min		1,72%
+Internacional	25,37%		19,4 min	7,70%
+Diferença	+9,51 p.p.	+14,3 min	+5,98 p.p.
+
+Voos internacionais têm 60% mais atrasos e 4,5x mais cancelamentos que domésticos.
+
+
+Aeroportos com Maior Diferença
+
+WITH aeroporto_escopo AS (
+  SELECT
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo,
+    COUNT(*) AS voos,
+    ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+    ROUND(
+      100.0
+        * try_divide(
+          SUM(
+            CASE
+              WHEN partida_pontual = false THEN 1
+              ELSE 0
+            END
+          ),
+          SUM(
+            CASE
+              WHEN partida_pontual IS NOT NULL THEN 1
+              ELSE 0
+            END
+          )
+        ),
+      2
+    ) AS pct_atrasados
+  FROM
+    `voebem`.`gold`.`obt_voos`
+  WHERE
+    pais_origem = 'Brasil'
+  GROUP BY
+    nome_aeroporto_origem,
+    municipio_origem,
+    uf_origem,
+    escopo_voo
+  HAVING
+    COUNT(*) >= 1000
+),
+aeroporto_diff AS (
+  SELECT
+    d.nome_aeroporto_origem,
+    d.municipio_origem,
+    d.uf_origem,
+    d.voos AS voos_domesticos,
+    d.pct_atrasados AS pct_atrasados_domestico,
+    i.voos AS voos_internacionais,
+    i.pct_atrasados AS pct_atrasados_internacional,
+    ROUND(i.pct_atrasados - d.pct_atrasados, 2) AS diferenca_pct_atrasados
+  FROM
+    aeroporto_escopo d
+      INNER JOIN aeroporto_escopo i
+        ON d.nome_aeroporto_origem = i.nome_aeroporto_origem
+        AND d.escopo_voo = 'Domestico'
+        AND i.escopo_voo = 'Internacional'
+)
+SELECT
+  *
+FROM
+  aeroporto_diff
+ORDER BY
+  diferenca_pct_atrasados DESC
+LIMIT 15
+
+Aeroportos com Maior Diferença de Atraso: Internacional vs Doméstico
+
+Source: Aeroportos com maior diferença de atraso entre internacional e doméstico
+
+Os aeroportos onde a diferença é mais acentuada: 9
+1. Viracopos (Campinas): +17,5 p.p. (33,9% internacional vs 16,4% doméstico)
+2. Afonso Pena (Curitiba): +14,0 p.p. (28,0% vs 13,9%)
+3. Salvador: +11,9 p.p. (23,6% vs 11,7%)
+3. Fortaleza: +9,2 p.p. (22,1% vs 13,0%)
+4. Manaus: +8,7 p.p. (22,8% vs 14,1%)
+
+Exceção notável: Guarulhos apresenta diferença negativa (-2,7 p.p.), com voos domésticos mais atrasados (27,9%) que internacionais (25,2%), provavelmente devido ao alto volume de conexões domésticas.
+
+Filtros aplicados: Aeroportos brasileiros com mínimo de 1.000 voos por escopo.
+_______________________________________________________________________________
+
+5. Recuperação de Atraso em Voo
+
+Quanto as Companhias Recuperam
+
+SELECT
+  nome_companhia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_saida_min,
+  ROUND(AVG(atraso_chegada_min), 2) AS atraso_chegada_min,
+  ROUND(AVG(minutos_recuperados), 2) AS recuperados_medio_min
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  minutos_recuperados IS NOT NULL
+GROUP BY
+  nome_companhia
+HAVING
+  COUNT(*) >= 10000
+ORDER BY
+  recuperados_medio_min DESC
+
+Recuperação de Atraso em Voo por Companhia
+
+Source: Recuperação de atraso em voo por companhia
+
+TAP lidera a recuperação com média de 9,8 minutos recuperados por voo, seguida por GOL (4,5 min) e Azul Conecta (3,2 min). 10
+
+Ranking de recuperação:
+1. TAP: 9,8 min (sai com 18,2 min de atraso, chega com 8,5 min)
+2. GOL: 4,5 min (sai com 4,7 min, chega com 0,1 min)
+3. Azul Conecta: 3,2 min
+4. TAM: 3,2 min
+5. Azul: 2,6 min
+6. LATAM: 2,3 min
+
+Rotas Onde a Recuperação Não Acontece
+
+As rotas com pior recuperação (onde o atraso aumenta em voo): 11
+1. Campo Grande → Guarulhos: -4,2 min (sai com 4,4 min, chega com 8,5 min)
+2. Florianópolis → Guarulhos: -1,1 min
+3. Navegantes → Guarulhos: -1,0 min
+4. Goiânia → Guarulhos: -0,3 min
+
+Padrão identificado: Rotas curtas com destino a Guarulhos tendem a perder tempo em vez de recuperar, provavelmente devido a congestionamento no aeroporto de destino.
+
+Filtros aplicados: Rotas com volume mínimo de 2.000 voos.
+_______________________________________________________________________________
+
+6. Companhias Mais Recomendadas por Escopo
+
+Voos Domésticos
+GOL é a mais recomendada para voos domésticos: 12
+° Pontualidade: 86,03% (1º lugar, empatada tecnicamente com Azul 86,01%)
+° Cancelamento: 1,15% (melhor entre as grandes)
+° Volume: 241.561 voos
+° Atraso médio: 4,67 minutos
+° Azul é alternativa equivalente (86,01% pontualidade, 1,54% cancelamento).
+
+Critério: GOL vence por margem mínima em pontualidade (0,02 p.p.) e melhor taxa de cancelamento (0,39 p.p. menor que Azul).
+
+
+Voos Internacionais
+° Copa Airlines é a mais recomendada para voos internacionais: 13
+° Pontualidade: 91,72% (líder absoluta)
+° Cancelamento: 2,88%
+° Volume: 9.546 voos
+° Atraso médio: 0,52 minutos
+
+Alternativas de qualidade:
+° British Airways: 87,89% pontualidade, 1,37% cancelamento
+° GOL (internacional): 86,46% pontualidade, 0,96% cancelamento (melhor em cancelamento)
+
+Critério: Copa Airlines apresenta pontualidade superior (+4,8 p.p. sobre a 2ª colocada) que compensa a taxa de cancelamento ligeiramente maior.
+
+Filtros aplicados: Companhias com mínimo de 10.000 voos (doméstico) ou 1.000 voos (internacional).
+_______________________________________________________________________________
+
+7. Companhias Menos Recomendadas por Escopo
+
+Voos Domésticos
+TAM Linhas Aéreas é a menos recomendada entre as grandes companhias domésticas:
+° Pontualidade: 80,89% (última entre as 4 principais)
+° Cancelamento: 1,55%
+° Volume: 277.279 voos
+° Atraso médio: 6,18 minutos
+
+Diferença para a líder (GOL): -5,14 p.p. em pontualidade.
+
+Ressalva: TAM ainda opera acima de 80% de pontualidade, mas fica consistentemente atrás de GOL e Azul.
+
+
+Voos Internacionais
+Entre companhias com operação significativa, as menos recomendadas são:
+1. ARAJET: 44,80% pontualidade, 73,79% cancelamento (3.026 voos)
+2. Ethiopian Airlines: 40,48% pontualidade, 45,05% cancelamento (3.467 voos)
+3. Companhias cargueiras (TAMPA, ATLAS, CARGOLUX, LAN CARGO): pontualidade entre 21-39%, mas são operações de carga, não passageiros
+
+Para passageiros, evitar:
+° TAP: 59,23% pontualidade (pior entre companhias de passageiros com alto volume)
+° Ibéria: 56,31% pontualidade, 54,61% cancelamento
+° BOA (Boliviana): 52,44% pontualidade, 17,85% cancelamento
+
+Critério: Priorizamos companhias com volume relevante (>1.000 voos) e operação regular de passageiros.
+_______________________________________________________________________________
+
+8. Considerações Importantes Não Destacadas
+8.1 O Paradoxo de Guarulhos
+Guarulhos apresenta comportamento atípico: é o aeroporto com maior taxa de atraso em voos domésticos (27,9%), mas seus voos internacionais são menos atrasados (25,2%). 9
+Hipótese: O alto volume de conexões domésticas (103.348 voos) cria efeito cascata mais intenso que em voos internacionais, que têm janelas de tempo maiores e menos conexões apertadas.
+Implicação prática: Passageiros com conexão em Guarulhos devem considerar janelas maiores entre voos domésticos.
+
+8.2 Azul Conecta: Alta Taxa de Cancelamento
+Azul Conecta apresenta 14,35% de cancelamento - 10x maior que as principais companhias - apesar de boa pontualidade (84,4%). 7
+Justificativa: Opera rotas regionais de menor demanda com aeronaves menores, mais suscetíveis a cancelamentos por viabilidade operacional.
+Implicação: Passageiros em rotas regionais devem ter planos alternativos.
+
+8.3 Recuperação em Voo: Métrica Enganosa
+A recuperação média de 2-10 minutos pode parecer positiva, mas não significa chegada pontual. 10
+Exemplo: TAP recupera 9,8 minutos, mas ainda chega com 8,5 minutos de atraso médio (partiu com 18,2 min de atraso).
+Implicação: Recuperação indica eficiência operacional, mas não garante pontualidade na chegada.
+
+8.4 Volume como Fator de Confiabilidade
+Companhias com volume muito baixo (<10.000 voos) apresentam métricas menos confiáveis. Por exemplo:
+LATAM Airlines Group (internacional): 81,92% pontualidade, mas apenas 13.957 voos
+Copa Airlines: 91,72% pontualidade com 9.546 voos
+Implicação: Métricas de companhias de alto volume (GOL: 259k, Azul: 284k, TAM: 302k) são mais representativas do desempenho consistente.
+_______________________________________________________________________________
+
+9. Análise de Pontualidade por Dia da Semana
+
+Desempenho Semanal
+
+SELECT
+  dia_semana,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  dia_semana IS NOT NULL
+GROUP BY
+  dia_semana
+ORDER BY
+  CASE dia_semana
+    WHEN 'domingo' THEN 1
+    WHEN 'segunda' THEN 2
+    WHEN 'terca' THEN 3
+    WHEN 'quarta' THEN 4
+    WHEN 'quinta' THEN 5
+    WHEN 'sexta' THEN 6
+    WHEN 'sabado' THEN 7
+  END
+
+Pontualidade por Dia da Semana
+
+Source: Pontualidade por dia da semana
+
+SELECT
+  dia_semana,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  dia_semana IS NOT NULL
+GROUP BY
+  dia_semana
+ORDER BY
+  CASE dia_semana
+    WHEN 'domingo' THEN 1
+    WHEN 'segunda' THEN 2
+    WHEN 'terca' THEN 3
+    WHEN 'quarta' THEN 4
+    WHEN 'quinta' THEN 5
+    WHEN 'sexta' THEN 6
+    WHEN 'sabado' THEN 7
+  END
+
+Desempenho Semanal: Atrasos e Cancelamentos
+
+Dia da Semana	Voos		% Atrasados	Atraso Médio (min)	% Cancelados
+domingo		135,0 mil	15.74%		6,8			2.56%
+segunda		143,7 mil	17.21%		7,5			2.89%
+terca		142,3 mil	17.03%		7			3.08%
+quarta		143,0 mil	18.15%		8,1			3.1%
+quinta		143,3 mil	19.2%		9			3.11%
+sexta		146,9 mil	19.49%		8,1			3.14%
+sabado		129,7 mil	15.46%		6,5			2.81%
+
+Source: Pontualidade por dia da semana
+
+
+Padrão semanal identificado: Há tendência geral de piora ao longo da semana, com pequena oscilação na terça-feira, e pico na sexta-feira. 14
+
+Observação metodológica: A análise semanal utiliza 983.866 voos (96,9% do total) que possuem dia da semana identificado. Os 30.798 voos sem data de partida programada são excluídos.
+
+Melhor e Pior Dia
+
+Melhor dia: Sábado
+° 15,46% de voos atrasados (menor taxa da semana)
+° 6,51 minutos de atraso médio
+° 2,81% de cancelamento
+° 129.669 voos (menor volume da semana)
+
+Pior dia: Sexta-feira
+° 19,49% de voos atrasados (maior taxa da semana)
+° 8,13 minutos de atraso médio
+° 3,14% de cancelamento
+° 146.898 voos (maior volume da semana)
+
+Padrão Operacional: Acúmulo Semanal
+
+Evolução ao longo da semana:
+
+1. Domingo: 15,74% atrasados - início da semana operacional com sistema "limpo"
+2. Segunda: 17,21% atrasados - primeira deterioração
+3. Terça: 17,03% atrasados - pequena melhora (oscilação)
+4. Quarta: 18,15% atrasados - retomada da piora
+5. Quinta: 19,20% atrasados - continuação da deterioração
+6. Sexta: 19,49% atrasados - pico semanal (acúmulo máximo + maior volume)
+7. Sábado: 15,46% atrasados - recuperação (menor volume permite "reset" do sistema)
+
+Diferença entre melhor e pior dia: 4,03 pontos percentuais (26% de variação relativa).
+
+Hipótese baseada no padrão observado: O sistema aeroportuário brasileiro opera com margem operacional apertada. Atrasos de segunda-feira se propagam e acumulam durante a semana, atingindo o pico na sexta-feira (maior demanda). O sábado, com 13% menos voos, permite que o sistema se recupere antes do domingo.
+
+Denominador das métricas:
+° % atrasados: voos com partida_pontual não nulo (exclui cancelados e sem horário programado)
+° % cancelados: total de voos programados
+_______________________________________________________________________________
+
+10. Análise de Pontualidade por Mês
+Desempenho Mensal
+SELECT
+  DATE_FORMAT(mes_referencia, 'yyyy-MM') AS mes,
+  mes_referencia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  mes_referencia IS NOT NULL
+GROUP BY
+  mes_referencia,
+  DATE_FORMAT(mes_referencia, 'yyyy-MM')
+ORDER BY
+  mes_referencia
+
+Pontualidade por Mês (Ago/2025 - Jul/2026)
+
+Source: Pontualidade por mês
+
+SELECT
+  DATE_FORMAT(mes_referencia, 'yyyy-MM') AS mes,
+  mes_referencia,
+  COUNT(*) AS voos,
+  ROUND(AVG(atraso_partida_min), 2) AS atraso_medio_min,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN partida_pontual = false THEN 1
+            ELSE 0
+          END
+        ),
+        SUM(
+          CASE
+            WHEN partida_pontual IS NOT NULL THEN 1
+            ELSE 0
+          END
+        )
+      ),
+    2
+  ) AS pct_atrasados,
+  ROUND(
+    100.0
+      * try_divide(
+        SUM(
+          CASE
+            WHEN voo_cancelado = true THEN 1
+            ELSE 0
+          END
+        ),
+        COUNT(*)
+      ),
+    2
+  ) AS pct_cancelados
+FROM
+  `voebem`.`gold`.`obt_voos`
+WHERE
+  mes_referencia IS NOT NULL
+GROUP BY
+  mes_referencia,
+  DATE_FORMAT(mes_referencia, 'yyyy-MM')
+ORDER BY
+  mes_referencia
+
+Desempenho Mensal: Atrasos e Cancelamentos
+
+Mês		Voos		% Atrasados	Atraso Médio (min)	% Cancelados
+2025-08		82,8 mil	14.03%		5,3			2.17%
+2025-09		80,2 mil	14.28%		5,5			2.3%
+2025-10		82,6 mil	16.42%		6,5			2.46%
+2025-11		78,3 mil	18.11%		8			2.37%
+2025-12		85,5 mil	27.97%		15			4.01%
+2026-01		89,0 mil	18.49%		8,7			3.17%
+2026-02		77,1 mil	17.66%		8			3.08%
+2026-03		84,6 mil	15.04%		6,2			3.1%
+2026-04		78,1 mil	17.54%		7,4			3.02%
+2026-05		79,9 mil	15.03%		5,3			2.99%
+2026-06		78,8 mil	18.62%		8			3.67%
+2026-07		86,9 mil	16.78%		7,1			3.14%
+2026-08		17,0		46.15%		78,1			23.53%
+
+Source: Pontualidade por mês
+
+Observação metodológica: A análise mensal utiliza 983.849 voos de agosto/2025 a julho/2026. Agosto/2026 (17 voos = primeiro dia do mês) é excluído por volume insuficiente.
+
+Dezembro/2025: Mês Crítico
+Dezembro/2025 é um outlier extremo: 15
+° 27,97% de voos atrasados - quase o dobro da média geral (17%)
+° 15,04 minutos de atraso médio - 2,8x a média dos outros meses
+° 4,01% de cancelamento - 74% acima da média anual
+° 85.450 voos - volume normal, não explica o problema
+
+Comparação com outros meses:
+° Agosto/2025: 14,03% atrasados, 5,31 min de atraso
+° Janeiro/2026: 18,49% atrasados, 8,66 min de atraso (recuperação pós-dezembro)
+° Média dos demais meses: ~16% atrasados, ~7 min de atraso
+
+Padrão Sazonal Identificado
+Três períodos distintos:
+1. Agosto-Setembro/2025 (início do período): Melhor desempenho (14,0-14,3% atrasados)
+2. Outubro-Novembro/2025 (pré-alta temporada): Deterioração gradual (16,4% → 18,1%)
+3. Dezembro/2025 (alta temporada): Colapso operacional (27,97% atrasados)
+4. Janeiro-Julho/2026 (pós-alta temporada): Recuperação gradual, oscilando entre 15-19%
+
+
+Meses Fora do Padrão
+
+Melhor mês: Agosto/2025
+° 14,03% atrasados
+° 5,31 min de atraso médio
+° 2,17% cancelamento
+
+Pior mês: Dezembro/2025
+° 27,97% atrasados (99% acima da média)
+° 15,04 min de atraso médio
+° 4,01% cancelamento
+
+Segundo pior: Junho/2026
+° 18,62% atrasados
+° 8,03 min de atraso médio
+° 3,67% cancelamento (segundo maior)
+
+Hipóteses Baseadas no Padrão Observado
+Para dezembro/2025:
+° Hipótese 1 (demanda sazonal): Dezembro é tradicionalmente mês de férias e festas de fim de ano no Brasil, com pico de demanda turística. O sistema pode ter operado próximo à capacidade máxima.
+° Hipótese 2 (condições meteorológicas): Dezembro é período de verão no Brasil, com maior incidência de tempestades convectivas que afetam operações aeroportuárias.
+° Hipótese 3 (efeito combinado): Alta demanda + condições meteorológicas adversas + efeito cascata criaram tempestade perfeita operacional.
+
+Para junho/2026:
+° Junho marca início das férias escolares de inverno, outro pico de demanda, mas com impacto menor que dezembro.
+
+Ressalva importante: Estas são hipóteses baseadas exclusivamente no padrão observado nos dados. Não temos informação sobre eventos externos específicos (greves, problemas de infraestrutura, condições meteorológicas reais) que possam ter causado o desempenho de dezembro/2025.
+
+Denominador das métricas:
+° % atrasados: voos com partida_pontual não nulo
+° % cancelados: total de voos programados
+_______________________________________________________________________________
+
+11. Consolidação Final: Principais Conclusões
+
+Pontos Críticos do Sistema
+1. Guarulhos é o gargalo operacional: 27,1% de atrasos, concentra as piores rotas, e apresenta paradoxo doméstico > internacional.
+
+2. Efeito cascata triplo:
+° Diário: Atrasos crescem de 8,3% (5h) para 26% (23h)
+° Semanal: Acúmulo de domingo (15,7%) a sexta (19,5%)
+° Sazonal: Dezembro/2025 colapsa com 28% de atrasos
+
+3. Voos internacionais são 60% mais problemáticos: 25,4% vs 15,9% de atrasos, 7,7% vs 1,7% de cancelamento.
+
+
+Recomendações Práticas para Passageiros
+Escolha de companhia:
+° Doméstico: GOL (86% pontual) ou Azul (86% pontual)
+° Internacional: Copa Airlines (92% pontual)
+° Evitar: TAM doméstico (81%), TAP internacional (59%)
+
+Escolha de horário:
+° Melhor: Voos entre 5h-7h (8-9% de atraso)
+° Evitar: Voos após 22h (26% de atraso)
+
+Escolha de dia:
+° Melhor: Sábado (15,5% de atraso)
+° Evitar: Sexta-feira (19,5% de atraso)
+
+Escolha de período:
+° Melhor: Agosto-setembro (14% de atraso)
+° Evitar: Dezembro (28% de atraso)
+
+Conexões em Guarulhos:
+° Considere janela mínima de 2-3 horas para voos domésticos
+° Rotas curtas para Guarulhos tendem a perder tempo em vez de recuperar
+
+Insights Operacionais
+1. Recuperação em voo existe mas é limitada: Média de 2-10 minutos, insuficiente para compensar atrasos grandes.
+2. Volume não é desculpa: Aeroportos menores (Campo Grande, Uberlândia) também têm taxas altas de atraso.
+3. Azul Conecta: Boa pontualidade (84%) mas 14% de cancelamento - risco para rotas regionais.
+4. Sistema opera no limite: Qualquer pico de demanda (dezembro, sextas-feiras) causa deterioração significativa.
+_______________________________________________________________________________
+
+12. Escopo, Filtros e Definições das Métricas
+
+Escopo Geral
+
+Período e Cobertura:
+° Dados disponíveis: Agosto/2025 a agosto/2026 parcial
+° Total de voos no dataset: 1.014.664
+° Período usado nas análises temporais: Agosto/2025 a julho/2026 (983.849 voos)
+° Exclusão: Agosto/2026 (17 voos = primeiro dia do mês, amostra insuficiente)
+° Voos sem data programada: 30.798 (3,1% do total) - excluídos das análises temporais
+
+Composição:
+° Companhias: 118
+° Rotas: 3.104
+° Fonte: Dados públicos VRA da ANAC via tabela voebem.gold.obt_voos
+
+Filtros Aplicados por Análise
+Análise				Filtro de Volume	Filtro de Escopo		Observações
+Aeroportos			≥ 5.000 voos		pais_origem = 'Brasil'		Apenas aeroportos brasileiros
+Rotas				≥ 2.000 voos		Todas				Inclui rotas internacionais
+Companhias (geral)		≥ 10.000 voos		Todas				Todas as companhias
+Companhias (doméstico)		≥ 10.000 voos		escopo_voo = 'Domestico'	Apenas voos domésticos
+Companhias (internacional)	≥ 1.000 voos		escopo_voo = 'Internacional'	Filtro menor por menor volume
+Aeroportos (dom vs int)		≥ 1.000 voos/escopo	pais_origem = 'Brasil'		Por escopo separadamente
+Dia da semana			Nenhum			dia_semana não nulo		983.866 voos (96,9% do total)
+Mês				Nenhum			Ago/2025 a Jul/2026		983.849 voos, exclui Ago/2026
+
+Definições das Métricas
+Pontualidade:
+° Critério: Voo é pontual quando atrasa ≤ 15 minutos
+° Cálculo: % de voos com partida_pontual = true
+° Denominador: Voos com partida_pontual não nulo (exclui cancelados e sem horário programado)
+° Importante: Voo cancelado NÃO entra no cálculo de pontualidade
+
+Atraso:
+° Definição: Diferença em minutos entre horário real e programado
+° Positivo: Voo atrasou
+° Negativo: Voo adiantou
+° Nulo: Voo cancelado, sem horário programado, ou valor fora da faixa plausível (-2h a +24h)
+
+Taxa de Cancelamento:
+° Cálculo: % de voos com voo_cancelado = true
+° Denominador: Total de voos programados (cancelados + realizados)
+
+Recuperação em Voo:
+° Definição: minutos_recuperados = atraso_partida_min - atraso_chegada_min
+° Positivo: Chegou MENOS atrasado que saiu (não significa que chegou no horário)
+° Negativo: Perdeu mais tempo depois de decolar
+° Nulo: Voo cancelado ou atraso fora da faixa plausível
+
+Escopo do Voo:
+° Doméstico: Origem e destino no Brasil
+° Internacional: Origem ou destino no exterior
+° Derivado de: codigo_tipo_linha (N/C = doméstico, I/G = internacional)
+
+Ressalvas Metodológicas
+1. Voos cancelados não têm atraso: Cancelamento é métrica separada, não entra em média de atraso nem em % de pontualidade.
+2. Denominador correto: % de atraso usa apenas voos que TÊM a métrica (partida_pontual não nulo), não o total de voos.
+3. Diferença entre totais: O total geral (1.014.664) difere do total das análises temporais (983.866) porque 30.798 voos (3,1%) não têm data de partida programada e são excluídos das análises por dia da semana e mês.
+4. Filtros de volume: Aplicados para garantir significância estatística. Companhias/rotas/aeroportos com volume muito baixo têm métricas menos confiáveis.
+5. Aeroportos estrangeiros: Não têm município/UF no cadastro da ANAC. Aparecem como "AEROPORTO FORA DO CADASTRO ANAC (código)".
+6. Agosto/2026: Apenas 17 voos (primeiro dia do mês), excluído das análises mensais por volume insuficiente.
+7. Companhias cargueiras: Incluídas nos dados mas separadas nas recomendações. Operam com lógica diferente de companhias de passageiros.
+8. Critério composto: "Melhor companhia geral" prioriza pontualidade (peso maior) sobre cancelamento, pois impacta mais passageiros. GOL tem maior pontualidade (86,06%), enquanto LATAM tem menor cancelamento (0,64%).
+9. Hipóteses sobre causas: Quando mencionadas (dezembro/2025, efeito semanal), são baseadas exclusivamente no padrão observado nos dados, não em informações externas confirmadas.
+
+Limitações da Análise
+° Sem dados de causa raiz: Não sabemos se atrasos são por manutenção, clima, tráfego aéreo, etc.
+° Sem dados de conexões: Não conseguimos medir impacto de atrasos em conexões perdidas.
+° Sem dados de satisfação: Métricas operacionais não capturam experiência completa do passageiro.
+° Período específico: Conclusões válidas para ago/2025-jul/2026, padrões podem mudar em outros períodos.
+° Sem controle de variáveis: Não isolamos efeitos de clima, greves, eventos especiais, etc.
+
+Sources (15)
+ 1. Visão geral dos dados
+ 2. Verificação de totais - dia da semana
+ 3. Verificação de totais - mês
+ 4. Aeroportos brasileiros com maiores atrasos de partida
+ 5. Rotas com maiores atrasos de partida
+ 6. Evolução do atraso ao longo do dia
+ 7. Pontualidade e cancelamento por companhia
+ 8. Comparação doméstico vs internacional
+ 9. Aeroportos com maior diferença de atraso entre internacional e doméstico
+10. Recuperação de atraso em voo por companhia
+11. Rotas com menor recuperação de atraso em voo
+12. Desempenho das companhias em voos domésticos
+13. Desempenho das companhias em voos internacionais
+14. Pontualidade por dia da semana
+15. Pontualidade por mês
+
+
+Always review the accuracy of responses.

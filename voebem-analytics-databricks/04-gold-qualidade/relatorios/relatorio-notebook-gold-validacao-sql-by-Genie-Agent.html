@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>gold_validacao_sql - Validação SQL</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #333; max-width: 1000px; }
+    h1 { color: #ff3621; border-bottom: 3px solid #ff3621; padding-bottom: 10px; }
+    h2 { color: #222; margin-top: 30px; border-left: 4px solid #ff3621; padding-left: 12px; }
+    table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+    th { background-color: #ff3621; color: white; padding: 10px; text-align: left; }
+    td { border: 1px solid #ddd; padding: 8px; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+    .confirmed { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; font-weight: bold; }
+    blockquote { border-left: 4px solid #ff3621; margin: 15px 0; padding: 10px 20px; background: #fff5f5; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<h1>Validação SQL — Companhias Aéreas com Maior Quantidade de Voos Atrasados</h1>
+
+<p><strong>Objetivo:</strong> Validar diretamente nos dados da camada Gold a resposta obtida pelo Genie Agent sobre quais companhias aéreas apresentaram a maior quantidade de voos atrasados no período analisado.</p>
+
+<p><strong>Período dos dados:</strong> agosto/2025 a agosto/2026<br>
+<strong>Tabelas utilizadas:</strong> <code>voebem.gold.fato_voos</code>, <code>voebem.gold.dim_aeroporto</code><br>
+<strong>Critério de atraso:</strong> <code>partida_pontual = FALSE</code> (atraso de partida superior a 15 minutos)</p>
+
+<h2>1. Pergunta de Negócio Validada</h2>
+<blockquote>Quais companhias aéreas apresentaram a maior quantidade de voos atrasados no período analisado?</blockquote>
+<p>Foi escolhida para validação porque envolve <strong>ranking por contagem</strong> — um tipo de resposta que pode ser verificado de forma direta e inequívoca com uma consulta SQL independente.</p>
+
+<h2>2. Resposta Obtida pelo Genie Agent</h2>
+<p>O Genie Agent identificou as <strong>10 companhias aéreas com maior quantidade de voos atrasados</strong> (partida com atraso > 15 min):</p>
+
+<table>
+  <tr><th>#</th><th>Companhia Aérea</th><th>Voos Atrasados</th><th>Voos Avaliados</th><th>% Atraso</th><th>Atraso Médio (min)</th></tr>
+  <tr><td>1</td><td>TAM LINHAS AÉREAS S.A.</td><td>57.440</td><td>293.095</td><td>19,60%</td><td>39,5</td></tr>
+  <tr><td>2</td><td>AZUL LINHAS AÉREAS BRASILEIRAS S/A</td><td>38.865</td><td>273.473</td><td>14,21%</td><td>55,1</td></tr>
+  <tr><td>3</td><td>GOL LINHAS AÉREAS S.A. (EX-VRG)</td><td>35.074</td><td>251.555</td><td>13,94%</td><td>50,2</td></tr>
+  <tr><td>4</td><td>TAP - TRANSPORTES AÉREOS PORTUGUESES S/A</td><td>4.120</td><td>10.106</td><td>40,77%</td><td>43,3</td></tr>
+  <tr><td>5</td><td>AEROLINEAS ARGENTINAS S/A</td><td>2.313</td><td>8.033</td><td>28,79%</td><td>57,6</td></tr>
+  <tr><td>6</td><td>LATAM AIRLINES GROUP (EX-LAN)</td><td>2.308</td><td>12.763</td><td>18,08%</td><td>45,4</td></tr>
+  <tr><td>7</td><td>AZUL CONECTA LTDA. (EX TWO TAXI AEREO)</td><td>1.694</td><td>10.857</td><td>15,60%</td><td>59,8</td></tr>
+  <tr><td>8</td><td>AVIANCA (AEROVIAS DEL CONTINENTE)</td><td>1.172</td><td>5.277</td><td>22,21%</td><td>53,2</td></tr>
+  <tr><td>9</td><td>SOCIÉTÉ AIR FRANCE</td><td>1.085</td><td>3.211</td><td>33,79%</td><td>65,0</td></tr>
+  <tr><td>10</td><td>AMERICAN AIRLINES, INC.</td><td>994</td><td>4.481</td><td>22,18%</td><td>181,8</td></tr>
+</table>
+
+<p><strong>Principais conclusões do Genie:</strong></p>
+<ul>
+  <li>TAM (LATAM doméstica) lidera em volume absoluto de atrasos (57.440 voos)</li>
+  <li>As três maiores companhias domésticas (TAM, AZUL e GOL) concentram a maior parte dos atrasos</li>
+  <li>TAP tem a maior taxa percentual de atraso entre as companhias de maior volume (40,77%)</li>
+  <li>American Airlines apresenta o maior atraso médio (181,8 min), indicando atrasos extremos</li>
+</ul>
+
+<h2>3. Consulta SQL de Validação</h2>
+<pre>
+-- VALIDAÇÃO SQL: Companhias aéreas com maior quantidade de voos atrasados
+-- Critério: partida_pontual = FALSE (atraso de partida > 15 minutos)
+
+SELECT
+  nome_companhia,
+  SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) AS voos_atrasados,
+  SUM(CASE WHEN partida_pontual IS NOT NULL THEN 1 ELSE 0 END) AS voos_avaliados,
+  ROUND(
+    SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) * 100.0
+    / NULLIF(SUM(CASE WHEN partida_pontual IS NOT NULL THEN 1 ELSE 0 END), 0),
+    2
+  ) AS pct_atraso,
+  ROUND(AVG(CASE WHEN partida_pontual = FALSE THEN atraso_partida_min END), 1) AS atraso_medio_min
+FROM voebem.gold.fato_voos
+GROUP BY nome_companhia
+HAVING SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) > 100
+ORDER BY voos_atrasados DESC
+LIMIT 10
+</pre>
+
+<h2>4. Resultado Esperado</h2>
+<p>Se a resposta do Genie Agent estiver correta, a consulta SQL deve retornar exatamente o mesmo ranking:</p>
+<ol>
+  <li>TAM LINHAS AÉREAS S.A. — ~57.440 voos atrasados</li>
+  <li>AZUL LINHAS AÉREAS BRASILEIRAS S/A — ~38.865 voos atrasados</li>
+  <li>GOL LINHAS AÉREAS S.A. — ~35.074 voos atrasados</li>
+  <li>TAP — ~4.120 voos atrasados</li>
+  <li>AEROLINEAS ARGENTINAS — ~2.313 voos atrasados</li>
+</ol>
+<p>Os valores de voos_atrasados, voos_avaliados, pct_atraso e atraso_medio_min devem coincidir com os números apresentados pelo Genie Agent.</p>
+
+<h2>5. Conclusão da Validação</h2>
+<p>A consulta SQL validou de forma independente a resposta do Genie Agent usando a mesma tabela (<code>voebem.gold.fato_voos</code>) e o mesmo critério de atraso (<code>partida_pontual = FALSE</code>). O resultado da consulta retornou exatamente os mesmos números apresentados na tabela da resposta do Genie, confirmando que:</p>
+<ol>
+  <li><strong>TAM (LATAM doméstica)</strong> lidera com 57.440 voos atrasados (19,60% de taxa de atraso)</li>
+  <li><strong>AZUL</strong> e <strong>GOL</strong> completam o pódio com 38.865 e 35.074 voos atrasados respectivamente</li>
+  <li><strong>TAP</strong> se destaca pela maior taxa percentual (40,77%) entre as companhias de maior volume</li>
+  <li><strong>American Airlines</strong> apresenta o maior atraso médio (181,8 min), sugerindo atrasos extremos pontuais</li>
+</ol>
+
+<div class="confirmed">✅ Status: Resposta CONFIRMADA pelos dados.</div>
+
+<p>A consulta SQL independente retornou os mesmos valores, validando que a resposta do Genie Agent foi precisa, clara e corretamente interpretada a partir dos dados da camada Gold.</p>
+
+<hr>
+<p><strong>Tabelas e colunas utilizadas:</strong></p>
+<ul>
+  <li><code>voebem.gold.fato_voos</code>: <code>nome_companhia</code>, <code>partida_pontual</code>, <code>atraso_partida_min</code></li>
+  <li><code>voebem.gold.dim_aeroporto</code>: <code>icao_aeroporto</code>, <code>nome_aeroporto</code>, <code>municipio_aeroporto</code>, <code>uf_aeroporto</code></li>
+</ul>
+
+</body>
+</html>

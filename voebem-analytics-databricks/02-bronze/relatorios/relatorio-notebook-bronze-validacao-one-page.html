@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório One Page — Validação da Camada Bronze</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --primary: #1a5276;
+    --accent: #2980b9;
+    --accent-light: #d4e6f1;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #dee2e6;
+    --code-bg: #f4f6f8;
+    --code-border: #cbd5e0;
+    --success: #27ae60;
+    --warn: #e67e22;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+  }
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    padding: 60px 24px 48px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 2.2rem; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .hero p { font-size: 1.05rem; max-width: 720px; margin: 0 auto; opacity: 0.92; }
+  .hero .meta {
+    margin-top: 18px;
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+  /* Layout */
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+  section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 1.45rem;
+    color: var(--primary);
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h3 { color: var(--primary); margin-bottom: 12px; font-size: 1.15rem; }
+  .card p { margin-bottom: 10px; }
+  /* Info badges */
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  .badge {
+    background: var(--accent-light);
+    color: var(--primary);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 12px 0;
+  }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+  }
+  pre code { font-size: 0.83rem; }
+  p code, li code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--primary);
+  }
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 12px 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.85rem;
+  }
+  th {
+    background: var(--primary);
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  tr:hover td { background: var(--accent-light); }
+  /* Highlight boxes */
+  .highlight {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+  }
+  .highlight strong { color: var(--primary); }
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 16px;
+    margin: 18px 0;
+  }
+  .metric-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .metric-box .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .metric-box .label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  /* TOC */
+  .toc {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .toc h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 10px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 32px 24px;
+    background: var(--primary);
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+  }
+  /* Sub-section */
+  .sub-title {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin: 20px 0 10px;
+    font-weight: 600;
+  }
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li {
+    padding: 6px 0 6px 28px;
+    position: relative;
+  }
+  ul.checklist li::before {
+    content: '\2714';
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: bold;
+  }
+  @media print {
+    .hero { padding: 30px 24px; }
+    .card, .metric-box { box-shadow: none; border: 1px solid var(--border); }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <h1>Validação da Camada Bronze &mdash; Leitura Apenas</h1>
+  <p>Script de validação pós-ingestão das cinco tabelas da camada Bronze do pipeline <code style="background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:4px;">voebem.bronze</code>. Operações exclusivamente de leitura: contagem de registros, esquema de colunas e amostra dos primeiros 10 registros de cada tabela.</p>
+  <div class="meta">Notebook de origem: <strong>bronze_validacao_py</strong> &middot; Catálogo: <strong>voebem</strong> &middot; Arquitetura: <strong>Medalhão (Bronze/Silver/Gold)</strong></div>
+</div>
+
+<div class="container">
+
+  <!-- ===== TOC ===== -->
+  <nav class="toc">
+    <h2>Sumário</h2>
+    <ol>
+      <li><a href="#objetivo">Objetivo</a></li>
+      <li><a href="#contexto">Contexto do Pipeline</a></li>
+      <li><a href="#tabelas">Tabelas Validadas</a></li>
+      <li><a href="#codigo">Código Principal</a></li>
+      <li><a href="#contagens">Contagem de Registros</a></li>
+      <li><a href="#esquemas">Esquema das Tabelas</a></li>
+      <li><a href="#amostras">Amostra de Dados</a></li>
+      <li><a href="#performance">Performance e Métricas</a></li>
+      <li><a href="#conclusao">Conclusão</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===== 1. OBJETIVO ===== -->
+  <section id="objetivo">
+    <div class="section-title"><span class="num">1</span> Objetivo</div>
+    <div class="card">
+      <p>Validar a integridade da ingestão dos dados na camada Bronze do pipeline de aviação civil brasileira (ANAC). O notebook executa três verificações por tabela, sem qualquer modificação nos dados:</p>
+      <ul class="checklist">
+        <li><strong>Contagem de registros</strong> — <code>df.count()</code> para confirmar que cada tabela possui dados.</li>
+        <li><strong>Esquema de colunas</strong> — inspeção de nomes e tipos via <code>df.schema</code>.</li>
+        <li><strong>Amostra de dados</strong> — <code>df.show(10, truncate=False)</code> para visualizar os primeiros registros.</li>
+      </ul>
+      <div class="highlight"><strong>Princípio:</strong> Apenas operações de leitura. Nada é inserido, atualizado, excluído ou criado.</div>
+    </div>
+  </section>
+
+  <!-- ===== 2. CONTEXTO ===== -->
+  <section id="contexto">
+    <div class="section-title"><span class="num">2</span> Contexto do Pipeline</div>
+    <div class="card">
+      <h3>Arquitetura Medalhão</h3>
+      <p>O projeto segue a arquitetura de medalhão (medallion architecture) com três camadas:</p>
+      <div class="badges">
+        <span class="badge">Bronze &mdash; dados brutos</span>
+        <span class="badge">Silver &mdash; dados limpos</span>
+        <span class="badge">Gold &mdash; dados agregados</span>
+      </div>
+      <h3 style="margin-top:16px;">Regras da Camada Bronze</h3>
+      <ul style="padding-left:20px; margin-top:6px;">
+        <li>Todas as colunas armazenadas como <code>string</code>, sem descarte de linhas.</li>
+        <li>Colunas de auditoria: <code>_arquivo_origem</code> e <code>_ingerido_em</code>.</li>
+        <li>Ingestão idempotente via <code>mode("overwrite")</code> (full-refresh).</li>
+        <li>CSVs brasileiros: separador ponto e vírgula (<code>;</code>), <code>skipRows=1</code> (BOM + linha "Atualizado em").</li>
+        <li>Nomes de colunas convertidos de português com espaços para <code>snake_case</code> para compatibilidade Delta.</li>
+      </ul>
+      <div class="highlight"><strong>Catálogo:</strong> <code>voebem</code> &middot; <strong>Schema:</strong> <code>bronze</code> &middot; <strong>Fonte:</strong> Dados públicos da ANAC (Agência Nacional de Aviação Civil).</div>
+    </div>
+  </section>
+
+  <!-- ===== 3. TABELAS ===== -->
+  <section id="tabelas">
+    <div class="section-title"><span class="num">3</span> Tabelas Validadas</div>
+    <div class="card">
+      <p>As cinco tabelas da camada Bronze submetidas à validação:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Tabela (catalog.schema.table)</th><th>Descrição</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><code>voebem.bronze.aerodromos</code></td><td>Cadastro de aeródromos brasileiros</td></tr>
+            <tr><td>2</td><td><code>voebem.bronze.codigos_operacao</code></td><td>Tabela de domínio: códigos de operação de voo</td></tr>
+            <tr><td>3</td><td><code>voebem.bronze.empresas_estrangeiras</code></td><td>Empresas aéreas estrangeiras registradas</td></tr>
+            <tr><td>4</td><td><code>voebem.bronze.empresas_nacionais</code></td><td>Empresas aéreas nacionais registradas</td></tr>
+            <tr><td>5</td><td><code>voebem.bronze.vra</code></td><td>Voo Regular Ativo &mdash; dados de voos da ANAC</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4. CÓDIGO ===== -->
+  <section id="codigo">
+    <div class="section-title"><span class="num">4</span> Código Principal</div>
+    <div class="card">
+      <p>Script Python executado no notebook, utilizando <strong>PySpark DataFrame API</strong>:</p>
+      <pre><code># =============================================================================
+# Validação pós-ingestão da camada Bronze
+# Apenas leitura: nada é inserido, atualizado, excluído ou criado.
+# Para cada tabela, exibe:
+#   1. Quantidade de registros
+#   2. Colunas e tipos de dados (esquema)
+#   3. Até 10 primeiros registros
+# =============================================================================
+
+# Lista das cinco tabelas da camada Bronze a validar
+TABELAS_BRONZE = [
+    "voebem.bronze.aerodromos",
+    "voebem.bronze.codigos_operacao",
+    "voebem.bronze.empresas_estrangeiras",
+    "voebem.bronze.empresas_nacionais",
+    "voebem.bronze.vra",
+]
+
+for tabela in TABELAS_BRONZE:
+    print("=" * 70)
+    print(f"TABELA: {tabela}")
+    print("=" * 70)
+
+    # Carrega a tabela como DataFrame (somente leitura)
+    df = spark.table(tabela)
+
+    # 1) Quantidade de registros
+    total = df.count()
+    print(f"\n[1] Total de registros: {total:,}\n")
+
+    # 2) Colunas e tipos de dados
+    print("[2] Colunas e tipos de dados:")
+    for campo in df.schema:
+        print(f"    {campo.name:&lt;30s} -&gt; {campo.dataType.simpleString()}")
+    print()
+
+    # 3) Primeiros registros (até 10)
+    print("[3] Primeiros registros (máximo 10):")
+    df.show(10, truncate=False)
+    print()</code></pre>
+    </div>
+  </section>
+
+  <!-- ===== 5. CONTAGENS ===== -->
+  <section id="contagens">
+    <div class="section-title"><span class="num">5</span> Contagem de Registros</div>
+    <div class="card">
+      <p>Resultado da verificação de contagem (<code>df.count()</code>) para cada tabela:</p>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="value">496</div><div class="label">aerodromos</div></div>
+        <div class="metric-box"><div class="value">13</div><div class="label">codigos_operacao</div></div>
+        <div class="metric-box"><div class="value">148</div><div class="label">empresas_estrangeiras</div></div>
+        <div class="metric-box"><div class="value">729</div><div class="label">empresas_nacionais</div></div>
+        <div class="metric-box"><div class="value">1.014.705</div><div class="label">vra</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tabela</th><th>Total de Registros</th><th>Colunas</th></tr></thead>
+          <tbody>
+            <tr><td><code>voebem.bronze.aerodromos</code></td><td style="text-align:right;font-weight:600">496</td><td style="text-align:right">12</td></tr>
+            <tr><td><code>voebem.bronze.codigos_operacao</code></td><td style="text-align:right;font-weight:600">13</td><td style="text-align:right">3</td></tr>
+            <tr><td><code>voebem.bronze.empresas_estrangeiras</code></td><td style="text-align:right;font-weight:600">148</td><td style="text-align:right">9</td></tr>
+            <tr><td><code>voebem.bronze.empresas_nacionais</code></td><td style="text-align:right;font-weight:600">729</td><td style="text-align:right">9</td></tr>
+            <tr><td><code>voebem.bronze.vra</code></td><td style="text-align:right;font-weight:600">1.014.705</td><td style="text-align:right">14</td></tr>
+            <tr style="border-top:2px solid var(--primary)"><td style="font-weight:700">TOTAL</td><td style="text-align:right;font-weight:700">1.016.091</td><td style="text-align:right;font-weight:700">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight"><strong>Observação:</strong> Todas as tabelas possuem dados. A tabela <code>vra</code> concentra a maior parte do volume com mais de 1 milhão de registros.</div>
+    </div>
+  </section>
+
+  <!-- ===== 6. ESQUEMAS ===== -->
+  <section id="esquemas">
+    <div class="section-title"><span class="num">6</span> Esquema das Tabelas</div>
+
+    <!-- aerodromos -->
+    <div class="card">
+      <h3>voebem.bronze.aerodromos &mdash; 12 colunas</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Coluna</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td>icao</td><td>string</td></tr>
+            <tr><td>ciad</td><td>string</td></tr>
+            <tr><td>nome</td><td>string</td></tr>
+            <tr><td>municipio</td><td>string</td></tr>
+            <tr><td>uf</td><td>string</td></tr>
+            <tr><td>municipio_servido</td><td>string</td></tr>
+            <tr><td>uf_servido</td><td>string</td></tr>
+            <tr><td>latitude</td><td>string</td></tr>
+            <tr><td>longitude</td><td>string</td></tr>
+            <tr><td>altitude</td><td>string</td></tr>
+            <tr><td>situacao</td><td>string</td></tr>
+            <tr><td>_ingerido_em</td><td>timestamp</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- codigos_operacao -->
+    <div class="card">
+      <h3>voebem.bronze.codigos_operacao &mdash; 3 colunas</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Coluna</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td>dominio</td><td>string</td></tr>
+            <tr><td>codigo</td><td>string</td></tr>
+            <tr><td>descricao</td><td>string</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- empresas_estrangeiras -->
+    <div class="card">
+      <h3>voebem.bronze.empresas_estrangeiras &mdash; 9 colunas</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Coluna</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td>icao</td><td>string</td></tr>
+            <tr><td>sigla_iata</td><td>string</td></tr>
+            <tr><td>razao_social</td><td>string</td></tr>
+            <tr><td>servico</td><td>string</td></tr>
+            <tr><td>cidade</td><td>string</td></tr>
+            <tr><td>uf</td><td>string</td></tr>
+            <tr><td>situacao</td><td>string</td></tr>
+            <tr><td>_arquivo_origem</td><td>string</td></tr>
+            <tr><td>_ingerido_em</td><td>timestamp</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- empresas_nacionais -->
+    <div class="card">
+      <h3>voebem.bronze.empresas_nacionais &mdash; 9 colunas</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Coluna</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td>icao</td><td>string</td></tr>
+            <tr><td>sigla_iata</td><td>string</td></tr>
+            <tr><td>razao_social</td><td>string</td></tr>
+            <tr><td>servico</td><td>string</td></tr>
+            <tr><td>cidade</td><td>string</td></tr>
+            <tr><td>uf</td><td>string</td></tr>
+            <tr><td>situacao</td><td>string</td></tr>
+            <tr><td>_arquivo_origem</td><td>string</td></tr>
+            <tr><td>_ingerido_em</td><td>timestamp</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- vra -->
+    <div class="card">
+      <h3>voebem.bronze.vra &mdash; 14 colunas</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Coluna</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td>icao_empresa</td><td>string</td></tr>
+            <tr><td>numero_voo</td><td>string</td></tr>
+            <tr><td>codigo_di</td><td>string</td></tr>
+            <tr><td>codigo_tipo_linha</td><td>string</td></tr>
+            <tr><td>icao_origem</td><td>string</td></tr>
+            <tr><td>icao_destino</td><td>string</td></tr>
+            <tr><td>partida_prevista</td><td>string</td></tr>
+            <tr><td>partida_real</td><td>string</td></tr>
+            <tr><td>chegada_prevista</td><td>string</td></tr>
+            <tr><td>chegada_real</td><td>string</td></tr>
+            <tr><td>situacao_voo</td><td>string</td></tr>
+            <tr><td>codigo_justificativa</td><td>string</td></tr>
+            <tr><td>_arquivo_origem</td><td>string</td></tr>
+            <tr><td>_ingerido_em</td><td>timestamp</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight"><strong>Padrão:</strong> Todas as colunas de negócio são <code>string</code> (regra da Bronze). Apenas <code>_ingerido_em</code> é <code>timestamp</code>, registrando o momento da ingestão.</div>
+    </div>
+  </section>
+
+  <!-- ===== 7. AMOSTRAS ===== -->
+  <section id="amostras">
+    <div class="section-title"><span class="num">7</span> Amostra de Dados</div>
+    <p style="margin-bottom:16px;color:var(--muted);">Primeiros 10 registros de cada tabela, conforme exibido pelo <code>df.show(10, truncate=False)</code>.</p>
+
+    <!-- aerodromos -->
+    <div class="card">
+      <h3>aerodromos &mdash; Amostra (10 registros)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>icao</th><th>ciad</th><th>nome</th><th>municipio</th><th>uf</th><th>latitude</th><th>longitude</th><th>altitude</th><th>situacao</th></tr></thead>
+          <tbody>
+            <tr><td>SBRB</td><td>AC0001</td><td>Plácido de Castro</td><td>RIO BRANCO</td><td>Acre</td><td>09°52'06"S</td><td>067°53'53"W</td><td>193,0</td><td>Cadastrado</td></tr>
+            <tr><td>SWPI</td><td>AM0006</td><td>Parintins</td><td>PARINTINS</td><td>Amazonas</td><td>02°40'25"S</td><td>056°46'39"W</td><td>25,0</td><td>Cadastrado</td></tr>
+            <tr><td>SBMQ</td><td>AP0001</td><td>Alberto Alcolumbre</td><td>MACAPÁ</td><td>Amapá</td><td>00°03'02"N</td><td>051°04'20"W</td><td>17,0</td><td>Cadastrado</td></tr>
+            <tr><td>SBVC</td><td>BA0005</td><td>Glauber de Andrade Rocha</td><td>VITÓRIA DA CONQUISTA</td><td>Bahia</td><td>14°54'28"S</td><td>040°54'53"W</td><td>894,0</td><td>Cadastrado</td></tr>
+            <tr><td>SBLE</td><td>BA0006</td><td>HORÁCIO DE MATTOS</td><td>LENÇÓIS</td><td>Bahia</td><td>12°28'56"S</td><td>041°16'37"W</td><td>506,0</td><td>Cadastrado</td></tr>
+            <tr><td>SNVB</td><td>BA0008</td><td>Valença</td><td>VALENÇA</td><td>Bahia</td><td>13°17'47"S</td><td>038°59'33"W</td><td>5,0</td><td>Cadastrado</td></tr>
+            <tr><td>SNGI</td><td>BA0009</td><td>Aeródromo de Guanambi</td><td>GUANAMBI</td><td>Bahia</td><td>14°12'29"S</td><td>042°44'46"W</td><td>553,0</td><td>Cadastrado</td></tr>
+            <tr><td>SNTF</td><td>BA0016</td><td>Teixeira de Freitas</td><td>TEIXEIRA DE FREITAS</td><td>Bahia</td><td>17°31'28"S</td><td>039°40'06"W</td><td>105,0</td><td>Cadastrado</td></tr>
+            <tr><td>SNIC</td><td>BA0019</td><td>Irecê</td><td>IRECÊ</td><td>Bahia</td><td>11°20'24"S</td><td>041°50'49"W</td><td>784,0</td><td>Cadastrado</td></tr>
+            <tr><td>SBFZ</td><td>CE0001</td><td>Pinto Martins</td><td>FORTALEZA</td><td>Ceará</td><td>03°46'33"S</td><td>038°31'56"W</td><td>25,0</td><td>Cadastrado</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- codigos_operacao -->
+    <div class="card">
+      <h3>codigos_operacao &mdash; Amostra (10 registros)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>dominio</th><th>codigo</th><th>descricao</th></tr></thead>
+          <tbody>
+            <tr><td>codigo_di</td><td>0</td><td>Etapa Regular</td></tr>
+            <tr><td>codigo_di</td><td>2</td><td>Etapa Extra</td></tr>
+            <tr><td>codigo_di</td><td>3</td><td>Etapa de Retorno</td></tr>
+            <tr><td>codigo_di</td><td>4</td><td>Inclusão de Etapa</td></tr>
+            <tr><td>codigo_di</td><td>6</td><td>Etapa Não Remunerada Sem Transporte de Objetos</td></tr>
+            <tr><td>codigo_di</td><td>7</td><td>Etapa de Voo de Fretamento</td></tr>
+            <tr><td>codigo_di</td><td>9</td><td>Etapa de Voo Charter</td></tr>
+            <tr><td>codigo_di</td><td>D</td><td>Etapa de Voo Duplicada</td></tr>
+            <tr><td>codigo_di</td><td>E</td><td>Etapa Não Remunerada Com Transporte de Objetos</td></tr>
+            <tr><td>codigo_tipo_linha</td><td>N</td><td>Doméstica Mista</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- empresas_estrangeiras -->
+    <div class="card">
+      <h3>empresas_estrangeiras &mdash; Amostra (10 registros)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th></tr></thead>
+          <tbody>
+            <tr><td>PLM</td><td>EB</td><td>WAMOS AIR S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO JOSÉ DOS PINHAIS</td><td>PR</td><td>ATIVA</td></tr>
+            <tr><td>IGA</td><td>TE</td><td>SKY TAXI SP. Z O.O.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>RIO DE JANEIRO</td><td>RJ</td><td>ATIVA</td></tr>
+            <tr><td>ARN</td><td>AN</td><td>AERONEXUS CORPORATE</td><td>ESTRANGEIRA NÃO REGULAR</td><td>INDAIATUBA</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>WFL</td><td>2W</td><td>WORLD 2 FLY, S.L. - W2FLY</td><td>ESTRANGEIRA NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>AJB</td><td>Z0</td><td>AMERICAN JET S.A.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>FLORIANÓPOLIS</td><td>SC</td><td>ATIVA</td></tr>
+            <tr><td>AMX</td><td>AM</td><td>AEROVÍAS DE MÉXICO S.A DE C.V - AEROMÉXICO</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>DWI</td><td>DM</td><td>ARAJET S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>ANZ</td><td>NZ</td><td>AIR NEW ZEALAND LIMITED</td><td>ESTRANGEIRA OFFLINE</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>GTR</td><td>GT</td><td>GALISTAIR TRANDING LTD.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>CAMPINAS</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>CUB</td><td>CU</td><td>CUBANA DE AVIACION S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- empresas_nacionais -->
+    <div class="card">
+      <h3>empresas_nacionais &mdash; Amostra (10 registros)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th></tr></thead>
+          <tbody>
+            <tr><td>NULL</td><td>..</td><td>AGRICENTER AVIAÇÃO AGRÍCOLA LTDA.</td><td>AEROAGRÍCOLA</td><td>PONTA PORÃ</td><td>MS</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>AERO AGRÍCOLA TELES PIRES LTDA</td><td>AEROAGRÍCOLA, COMBATE A INCÊNDIOS</td><td>SORRISO</td><td>MT</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>AMM SERVIÇOS AÉREOS LTDA</td><td>VOOS PANORÂMICOS</td><td>ITAPEMA</td><td>SC</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>NAGANO E BORGES AVIAÇÃO AGRÍCOLA LTDA (AEROJET AVIAÇÃO AGRÍCOLA)</td><td>AEROAGRÍCOLA</td><td>ABAETETUBA</td><td>PA</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>NULL</td><td>AEROCLUBE DE SÃO JOSÉ DO RIO PRETO</td><td>VOOS PANORÂMICOS</td><td>SÃO JOSÉ DO RIO PRETO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>MÁXIMA AVIAÇÃO AGRÍCOLA EIRELI</td><td>AEROAGRÍCOLA</td><td>NOVA XAVANTINA</td><td>MT</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>HIGH CLASS TÁXI AÉREO LTDA</td><td>TÁXI-AÉREO, TRANSPORTE AÉREO NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>JET BLACK PARTICIPAÇÕES LTDA</td><td>TÁXI-AÉREO, TRANSPORTE AÉREO NÃO REGULAR</td><td>CAMPINAS</td><td>SP</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>AERO FARM SERVIÇOS DE PULVERIZAÇÃO E AVIAÇÃO AGRÍCOLA LTDA</td><td>AEROAGRÍCOLA</td><td>SORRISO</td><td>MT</td><td>ATIVA</td></tr>
+            <tr><td>NULL</td><td>..</td><td>AMAZON GREEN TÁXI AÉREO E SERVIÇOS AERONÁUTICOS LTDA</td><td>TÁXI-AÉREO</td><td>SÃO JOSÉ DO RIO PRETO</td><td>SP</td><td>ATIVA</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight"><strong>Nota:</strong> Campos <code>icao</code> e <code>sigla_iata</code> apresentam valores <code>NULL</code> ou <code>..</code> em empresas menores &mdash; comportamento esperado na camada Bronze, que preserva todos os dados brutos.</div>
+    </div>
+
+    <!-- vra -->
+    <div class="card">
+      <h3>vra &mdash; Amostra (10 registros)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>icao_empresa</th><th>numero_voo</th><th>codigo_di</th><th>codigo_tipo_linha</th><th>icao_origem</th><th>icao_destino</th><th>partida_prevista</th><th>partida_real</th><th>chegada_prevista</th><th>chegada_real</th><th>situacao_voo</th><th>codigo_justificativa</th><th>_arquivo_origem</th></tr></thead>
+          <tbody>
+            <tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-25 06:00:00</td><td>2026-06-25 05:53:00</td><td>2026-06-25 07:05:00</td><td>2026-06-25 06:48:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-27 06:00:00</td><td>2026-06-27 06:02:00</td><td>2026-06-27 07:05:00</td><td>2026-06-27 07:00:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-30 06:00:00</td><td>2026-06-30 05:53:00</td><td>2026-06-30 07:05:00</td><td>2026-06-30 06:55:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-02 14:20:00</td><td>2026-06-02 14:25:00</td><td>2026-06-02 16:20:00</td><td>2026-06-02 16:13:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-07 14:00:00</td><td>2026-06-07 14:02:00</td><td>2026-06-07 16:00:00</td><td>2026-06-07 15:59:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-09 14:20:00</td><td>2026-06-09 14:24:00</td><td>2026-06-09 16:20:00</td><td>2026-06-09 16:31:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-14 14:00:00</td><td>2026-06-14 13:53:00</td><td>2026-06-14 16:00:00</td><td>2026-06-14 15:48:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-16 14:20:00</td><td>2026-06-16 14:17:00</td><td>2026-06-16 16:20:00</td><td>2026-06-16 16:20:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-21 14:00:00</td><td>2026-06-21 14:04:00</td><td>2026-06-21 16:00:00</td><td>2026-06-21 15:59:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+            <tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-23 14:20:00</td><td>2026-06-23 14:59:00</td><td>2026-06-23 16:20:00</td><td>2026-06-23 17:17:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight"><strong>Observação:</strong> Todos os voos amostrados estão com situação <code>REALIZADO</code>, empresa <code>GLO</code> (Gol), arquivo de origem <code>VRA_20266.csv</code>. Dados de junho/2026.</div>
+    </div>
+  </section>
+
+  <!-- ===== 8. PERFORMANCE ===== -->
+  <section id="performance">
+    <div class="section-title"><span class="num">8</span> Performance e Métricas</div>
+    <div class="card">
+      <h3>Volume de Dados por Tabela</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tabela</th><th>Registros</th><th>Colunas</th><th>% do Total</th></tr></thead>
+          <tbody>
+            <tr><td><code>aerodromos</code></td><td style="text-align:right">496</td><td style="text-align:right">12</td><td style="text-align:right">0,05%</td></tr>
+            <tr><td><code>codigos_operacao</code></td><td style="text-align:right">13</td><td style="text-align:right">3</td><td style="text-align:right">0,001%</td></tr>
+            <tr><td><code>empresas_estrangeiras</code></td><td style="text-align:right">148</td><td style="text-align:right">9</td><td style="text-align:right">0,01%</td></tr>
+            <tr><td><code>empresas_nacionais</code></td><td style="text-align:right">729</td><td style="text-align:right">9</td><td style="text-align:right">0,07%</td></tr>
+            <tr><td><code>vra</code></td><td style="text-align:right">1.014.705</td><td style="text-align:right">14</td><td style="text-align:right">99,87%</td></tr>
+            <tr style="border-top:2px solid var(--primary)"><td style="font-weight:700">TOTAL</td><td style="text-align:right;font-weight:700">1.016.091</td><td style="text-align:right;font-weight:700">47</td><td style="text-align:right;font-weight:700">100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight">
+        <strong>Destaque:</strong> A tabela <code>vra</code> representa <strong>99,87%</strong> do volume total de registros da camada Bronze, com mais de 1 milhão de voos registrados. As demais tabelas são tabelas de referência/cadastro, com volume reduzido.
+      </div>
+      <h3 style="margin-top:18px;">Auditoria de Ingestão</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Métrica</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td>Tabelas validadas</td><td>5</td></tr>
+            <tr><td>Total de registros</td><td>1.016.091</td></tr>
+            <tr><td>Total de colunas (soma)</td><td>47</td></tr>
+            <tr><td>Coluna de auditoria (timestamp)</td><td><code>_ingerido_em</code> em 4 das 5 tabelas (exceto codigos_operacao)</td></tr>
+            <tr><td>Coluna de auditoria (origem)</td><td><code>_arquivo_origem</code> em 3 das 5 tabelas (empresas_estrangeiras, empresas_nacionais e vra)</td></tr>
+            <tr><td>Data de ingestão observada</td><td>2026-09-17</td></tr>
+            <tr><td>Erros encontrados</td><td style="color:var(--success);font-weight:600">Nenhum</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 9. CONCLUSÃO ===== -->
+  <section id="conclusao">
+    <div class="section-title"><span class="num">9</span> Conclusão</div>
+    <div class="card">
+      <ul class="checklist">
+        <li>Todas as cinco tabelas da camada Bronze foram validadas com sucesso.</li>
+        <li>Nenhuma tabela está vazia &mdash; todas possuem registros ingeridos.</li>
+        <li>O esquema está consistente: colunas de negócio como <code>string</code> e <code>_ingerido_em</code> como <code>timestamp</code>.</li>
+        <li>Colunas de auditoria (<code>_arquivo_origem</code>, <code>_ingerido_em</code>) presentes conforme as regras da Bronze.</li>
+        <li>Valores <code>NULL</code> e <code>..</code> preservados na camada Bronze, conforme esperado (sem descarte de dados).</li>
+        <li>Nenhuma operação de escrita foi executada &mdash; validação 100% somente leitura.</li>
+      </ul>
+      <div class="highlight" style="margin-top:18px;">
+        <strong>Próximos passos sugeridos:</strong>
+        <ul style="margin-top:8px;padding-left:20px;">
+          <li>Construir a camada <strong>Silver</strong> com limpeza de tipos e padronização de valores nulos.</li>
+          <li>Aplicar regras de qualidade de dados (data quality checks) na transição Bronze &rarr; Silver.</li>
+          <li>Criar a camada <strong>Gold</strong> com agregações e métricas de negócio (ex.: pontualidade, cancelamentos).</li>
+          <li>Automatizar a execução da validação como parte do pipeline de ingestão.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Relatório gerado automaticamente a partir do notebook <strong>bronze_validacao_py</strong><br>
+  Pipeline de Engenharia de Dados &mdash; Aviação Civil Brasileira (ANAC) &middot; Catálogo <code>voebem</code>
+</footer>
+
+</body>
+</html>

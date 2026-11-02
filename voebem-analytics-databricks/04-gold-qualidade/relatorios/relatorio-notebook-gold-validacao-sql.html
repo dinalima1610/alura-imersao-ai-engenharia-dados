@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Relatório autocontido da validação SQL de companhias aéreas com maior quantidade de voos atrasados.">
+  <title>Validação SQL — Companhias Aéreas com Maior Quantidade de Voos Atrasados</title>
+  <script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=1b0PfgCbx-v4leQVICSKGED5V7nKYd4YrFsgX3oh7rgBqawzCib5rnTAqL_Bpx2f3oqiVGeGgz6By08d6nCK-s5gwFlreXxd3ceuGyDPb4zES9Ok3VTknP1FMIJnTGEyrVT4TBLYssDXQG6hVhrDFLzcBCKSdA55iD1uDBfRS0CsSEThXedPlUOH_Y-0R0YBoISmv1ahsrgM48M5TBri-exEQJtyYv7JJqUB6FZ-nVGlMNPm8vBhTyEh5va-Gazr39um9z3ZnVhvOhv0HNRgan0yu5mswoZLm56_lX9mzQ6Aw0tWyEjV62vizvC5nllhfXv3KrbgrO0EyQ4dh2RVZ8QQ1rsgNFi2yFic7Tsge_I" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ_aWQ9ZmlsZV8wMDAwMDAwMDM1ZmM4MjExYjc1YTQ2NjhhNGE3NTc3YiZmbj1yZWxhdG9yaW9fbm90ZWJvb2tfZ29sZF92YWxpZGFjYW9fc3FsLmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTcyNDkmcD1mcyZjaWQ9MSZzaWc9ODg1Mzg5ZjlhN2VkNTZjNTg5ZmFiMWI4YmE5ZTNlNmE4Yjk4M2Y2ZTQxMWMyZDg3OGI1OGU4ODI5ZWUyODdjMiZ2PTA"/><script>
+    (function () {
+      var theme = 'light';
+      try {
+        if (localStorage.getItem('notebook-report-theme') === 'dark') theme = 'dark';
+      } catch (e) { theme = 'light'; }
+      document.documentElement.setAttribute('data-theme', theme);
+    }());
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F5F1E8;
+      --bg-secondary: #ECE5D6;
+      --card: #FFFCF6;
+      --header-start: #3F5646;
+      --header-mid: #6F8064;
+      --header-end: #C8AE7D;
+      --primary: #6F8064;
+      --primary-strong: #556B55;
+      --accent: #C8AE7D;
+      --accent-secondary: #A7B59B;
+      --text: #2E352D;
+      --text-secondary: #697065;
+      --header-text: #FFFDF7;
+      --header-muted: #EDE6D8;
+      --border: #D8CDB8;
+      --link: #526B50;
+      --code-bg: #EFE8DB;
+      --code-text: #2E352D;
+      --code-border: #D4C7AF;
+      --table-head: #E5DDCC;
+      --row-odd: #FAF6EE;
+      --row-even: #FFFCF6;
+      --info-bg: #EEF2E7;
+      --info-border: #6F8064;
+      --attention-bg: #F6E9D3;
+      --attention-border: #C8AE7D;
+      --success-bg: #E7EDE0;
+      --success-border: #7F9270;
+      --success-text: #3F5646;
+      --footer: #E9E1D1;
+      --shadow: 0 10px 28px rgba(63, 86, 70, .12);
+      --soft-shadow: 0 4px 14px rgba(63, 86, 70, .08);
+      --badge-bg: #E5DDCC;
+      --badge-text: #3F5646;
+      --focus: #C8AE7D;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #171D18;
+      --bg-secondary: #20281F;
+      --card: #1D241D;
+      --header-start: #101610;
+      --header-mid: #2E3A2F;
+      --header-end: #5E513B;
+      --primary: #A7B59B;
+      --primary-strong: #C1CBAF;
+      --accent: #D6C19A;
+      --accent-secondary: #B8A777;
+      --text: #ECE7DD;
+      --text-secondary: #C8C1B2;
+      --header-text: #FFFDF7;
+      --header-muted: #E6DCCB;
+      --border: #47503F;
+      --link: #D6C19A;
+      --code-bg: #141A14;
+      --code-text: #E8E2D5;
+      --code-border: #47503F;
+      --table-head: #2B352A;
+      --row-odd: #1A211A;
+      --row-even: #1D241D;
+      --info-bg: #253023;
+      --info-border: #A7B59B;
+      --attention-bg: #332B1F;
+      --attention-border: #D6C19A;
+      --success-bg: #24301F;
+      --success-border: #A7B59B;
+      --success-text: #DDE6CF;
+      --footer: #141A14;
+      --shadow: 0 12px 30px rgba(0, 0, 0, .25);
+      --soft-shadow: 0 5px 16px rgba(0, 0, 0, .2);
+      --badge-bg: #2B352A;
+      --badge-text: #E6DCCB;
+      --focus: #D6C19A;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      overflow-wrap: break-word;
+      transition: background-color .2s ease, color .2s ease;
+    }
+    a { color: var(--link); text-decoration-thickness: .09em; text-underline-offset: .18em; }
+    a:hover { text-decoration-thickness: .16em; }
+    a:focus-visible, button:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    .skip-link {
+      position: fixed; left: 1rem; top: -5rem; z-index: 100;
+      padding: .7rem 1rem; background: var(--card); color: var(--text); border-radius: 8px;
+    }
+    .skip-link:focus { top: 1rem; }
+    .container { width: min(1240px, calc(100% - 3rem)); margin-inline: auto; }
+
+    header {
+      position: relative;
+      background: linear-gradient(125deg, var(--header-start), var(--header-mid) 55%, var(--header-end));
+      color: var(--header-text);
+      padding: clamp(2.4rem, 7vw, 5.5rem) 0 3.2rem;
+      overflow: hidden;
+    }
+    header::after {
+      content: ""; position: absolute; inset: auto -7rem -10rem auto; width: 26rem; height: 26rem;
+      border-radius: 50%; background: rgba(255,255,255,.06); pointer-events: none;
+    }
+    .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; }
+    .eyebrow { margin: 0 0 .7rem; color: var(--header-muted); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { max-width: 950px; margin: 0; font-size: clamp(2rem, 4.6vw, 3.65rem); line-height: 1.1; letter-spacing: -.035em; }
+    .subtitle { max-width: 820px; margin: 1rem 0 0; color: var(--header-muted); font-size: clamp(1rem, 2vw, 1.22rem); }
+    .badges { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.6rem; }
+    .badge { display: inline-flex; align-items: center; gap: .42rem; padding: .42rem .72rem; border: 1px solid rgba(255,255,255,.23); border-radius: 999px; background: rgba(255,255,255,.1); color: var(--header-text); font-size: .84rem; }
+    .theme-toggle {
+      flex: 0 0 auto; display: inline-flex; align-items: center; gap: .55rem; min-height: 44px;
+      padding: .68rem .9rem; color: var(--header-text); background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.28); border-radius: 999px; cursor: pointer;
+      font: inherit; font-weight: 700; backdrop-filter: blur(4px);
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,.2); }
+
+    main { padding: 2rem 0 4.5rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 15px;
+      box-shadow: var(--shadow); padding: clamp(1.25rem, 3vw, 2rem);
+    }
+    .toc { margin-top: -3.5rem; position: relative; z-index: 2; }
+    .toc h2 { margin: 0 0 1rem; font-size: 1.08rem; }
+    .toc ol { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .65rem 1.5rem; margin: 0; padding-left: 1.25rem; }
+    .toc a { display: inline-block; padding: .18rem 0; font-weight: 650; }
+
+    section { margin-top: 2rem; scroll-margin-top: 1rem; }
+    .section-title { display: flex; align-items: center; gap: .75rem; margin: 0; font-size: clamp(1.35rem, 2.8vw, 1.85rem); line-height: 1.25; }
+    .section-number { flex: 0 0 auto; display: inline-grid; place-items: center; width: 2.15rem; height: 2.15rem; border-radius: 50%; background: var(--primary); color: #fff; font-size: .9rem; font-weight: 800; }
+    .section-rule { height: 1px; margin: .9rem 0 1.3rem; background: linear-gradient(90deg, var(--primary), var(--border) 40%, transparent); }
+    h3 { margin: 1.4rem 0 .5rem; font-size: 1.08rem; }
+    p { margin: .55rem 0 1rem; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: .35rem; }
+    code { font-family: "Cascadia Code", Consolas, "Liberation Mono", monospace; }
+    p code, li code { padding: .12em .35em; background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 5px; font-size: .9em; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+    .mini-card { padding: 1.15rem; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-secondary); box-shadow: var(--soft-shadow); }
+    .mini-card h3 { margin-top: 0; }
+    .callout { padding: 1rem 1.15rem; border-left: 4px solid var(--info-border); border-radius: 0 10px 10px 0; background: var(--info-bg); }
+    .callout.attention { border-left-color: var(--attention-border); background: var(--attention-bg); }
+    .callout.success { border-left-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+    .callout > :last-child { margin-bottom: 0; }
+    blockquote { margin: 1rem 0; padding: 1rem 1.2rem; border-left: 4px solid var(--accent-secondary); background: var(--bg-secondary); border-radius: 0 10px 10px 0; font-size: 1.08rem; }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: .9rem; margin: 1rem 0; }
+    .metric { min-height: 125px; padding: 1rem; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-secondary); box-shadow: var(--soft-shadow); }
+    .metric .value { display: block; color: var(--primary-strong); font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 850; line-height: 1.15; }
+    .metric .label { display: block; margin-top: .35rem; color: var(--text-secondary); font-size: .88rem; font-weight: 700; }
+
+    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+    table { width: 100%; min-width: 900px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { padding: .78rem .85rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--table-head); color: var(--text); font-size: .85rem; letter-spacing: .015em; }
+    tbody tr:nth-child(odd) { background: var(--row-odd); }
+    tbody tr:nth-child(even) { background: var(--row-even); }
+    tbody tr:last-child td { border-bottom: 0; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+    .rank { font-weight: 800; color: var(--primary-strong); }
+
+    details { margin-top: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; }
+    summary { position: relative; list-style: none; cursor: pointer; padding: .9rem 3rem .9rem 1rem; font-weight: 750; background: var(--bg-secondary); }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; position: absolute; right: 1rem; top: 50%; translate: 0 -50%; color: var(--primary); font-size: 1.35rem; }
+    details[open] summary::after { content: "−"; }
+    details[open] summary { border-bottom: 1px solid var(--border); }
+    .details-body { padding: 1rem; }
+    .code-shell { position: relative; margin-top: .75rem; }
+    .code-label { position: absolute; right: .75rem; top: .65rem; padding: .18rem .5rem; border-radius: 999px; background: var(--badge-bg); color: var(--badge-text); font-size: .72rem; font-weight: 800; }
+    pre { margin: 0; padding: 2.8rem 1.15rem 1.15rem; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--code-border); border-radius: 12px; font: .9rem/1.55 "Cascadia Code", Consolas, "Liberation Mono", monospace; white-space: pre; tab-size: 2; }
+    .top-link { display: block; width: max-content; margin: 1rem 0 0 auto; font-size: .82rem; font-weight: 700; }
+    .muted { color: var(--text-secondary); }
+    .not-found { font-style: italic; color: var(--text-secondary); }
+
+    footer { padding: 2rem 0; background: var(--footer); border-top: 1px solid var(--border); color: var(--text-secondary); font-size: .9rem; }
+    footer p { margin: .2rem 0; }
+
+    @media (max-width: 900px) {
+      .toc ol { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .header-row { flex-direction: column-reverse; }
+      .theme-toggle { align-self: flex-end; }
+    }
+    @media (max-width: 620px) {
+      .container { width: min(100% - 1.25rem, 1240px); }
+      header { padding-top: 1.2rem; }
+      .toc { margin-top: -2rem; }
+      .toc ol, .grid, .metric-grid { grid-template-columns: 1fr; }
+      .theme-toggle { align-self: stretch; justify-content: center; }
+      .card { padding: 1rem; border-radius: 12px; }
+      .section-title { align-items: flex-start; }
+      .badges { gap: .45rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+    @media print {
+      :root, html[data-theme="dark"] { color-scheme: light; }
+      .theme-toggle, .top-link, .skip-link { display: none !important; }
+      body { background: #FFFCF6; color: #2E352D; }
+      .card, .mini-card, details { box-shadow: none; break-inside: avoid; }
+      header { background: #6F8064 !important; print-color-adjust: exact; }
+      details > * { display: block !important; }
+    }
+  </style>
+</head>
+<body id="topo">
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo principal</a>
+  <header>
+    <div class="container header-row">
+      <div>
+        <p class="eyebrow">Relatório de validação · Camada Gold</p>
+        <h1>Validação SQL — Companhias Aéreas com Maior Quantidade de Voos Atrasados</h1>
+        <p class="subtitle">Validação independente da resposta do Genie Agent a partir dos dados registrados no notebook.</p>
+        <div class="badges" aria-label="Informações do notebook">
+          <span class="badge">▣ Origem: gold_validacao_sql</span>
+          <span class="badge">⌘ Tecnologia: SQL no Databricks</span>
+          <span class="badge">◷ Período: agosto/2025 a agosto/2026</span>
+        </div>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Ativar Dark Mode" aria-pressed="false" title="Ativar Dark Mode">
+        <span id="theme-icon" aria-hidden="true">☾</span>
+        <span id="theme-label">Ativar Dark Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container">
+    <nav class="toc card" aria-labelledby="toc-title">
+      <h2 id="toc-title">Sumário</h2>
+      <ol>
+        <li><a href="#objetivo">Objetivo e contexto</a></li>
+        <li><a href="#dados">Período e tabelas</a></li>
+        <li><a href="#criterio">Critério de atraso</a></li>
+        <li><a href="#pergunta">Pergunta de negócio</a></li>
+        <li><a href="#genie">Resposta do Genie</a></li>
+        <li><a href="#conclusoes-genie">Conclusões do Genie</a></li>
+        <li><a href="#consulta">Consulta de validação</a></li>
+        <li><a href="#resultado">Resultado esperado</a></li>
+        <li><a href="#validacao">Conclusão da validação</a></li>
+        <li><a href="#performance">Performance e Métricas</a></li>
+        <li><a href="#dados-tecnicos">Dados técnicos adicionais</a></li>
+      </ol>
+    </nav>
+
+    <section id="objetivo" class="card" aria-labelledby="titulo-objetivo">
+      <h2 class="section-title" id="titulo-objetivo"><span class="section-number">1</span> Objetivo e contexto</h2>
+      <div class="section-rule"></div>
+      <div class="grid">
+        <div class="mini-card">
+          <h3>Objetivo</h3>
+          <p>Validar diretamente nos dados da camada Gold a resposta obtida pelo Genie Agent sobre quais companhias aéreas apresentaram a maior quantidade de voos atrasados no período analisado.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Contexto do pipeline</h3>
+          <p>A validação utiliza dados da camada Gold e uma consulta SQL independente para conferir um ranking por contagem apresentado pelo Genie Agent.</p>
+          <p class="muted">O notebook não descreve outras camadas ou etapas do pipeline.</p>
+        </div>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="dados" class="card" aria-labelledby="titulo-dados">
+      <h2 class="section-title" id="titulo-dados"><span class="section-number">2</span> Período e tabelas utilizadas</h2>
+      <div class="section-rule"></div>
+      <div class="metric-grid">
+        <div class="metric"><span class="value">ago/2025</span><span class="label">Início do período</span></div>
+        <div class="metric"><span class="value">ago/2026</span><span class="label">Fim do período</span></div>
+        <div class="metric"><span class="value">2</span><span class="label">Tabelas citadas no notebook</span></div>
+        <div class="metric"><span class="value">Gold</span><span class="label">Camada de dados</span></div>
+      </div>
+      <div class="grid">
+        <article class="mini-card">
+          <h3><code>voebem.gold.fato_voos</code></h3>
+          <p>Tabela fato com voos, atrasos e pontualidade. É a tabela efetivamente consultada na validação SQL.</p>
+        </article>
+        <article class="mini-card">
+          <h3><code>voebem.gold.dim_aeroporto</code></h3>
+          <p>Dimensão de aeroportos. Segundo a conclusão do notebook, foi usada nas perguntas sobre aeroportos e rotas; não aparece no <code>FROM</code> da consulta de validação exibida.</p>
+        </article>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="criterio" class="card" aria-labelledby="titulo-criterio">
+      <h2 class="section-title" id="titulo-criterio"><span class="section-number">3</span> Critério de atraso</h2>
+      <div class="section-rule"></div>
+      <div class="callout">
+        <p><strong>Regra registrada:</strong> <code>partida_pontual = FALSE</code></p>
+        <p>Interpretação presente no notebook: atraso de partida superior a 15 minutos.</p>
+      </div>
+      <p>A consulta aplica ainda o filtro <code>HAVING ... &gt; 100</code>, descrito no comentário SQL como remoção de ruído para manter companhias com mais de 100 voos atrasados.</p>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="pergunta" class="card" aria-labelledby="titulo-pergunta">
+      <h2 class="section-title" id="titulo-pergunta"><span class="section-number">4</span> Pergunta de Negócio Validada</h2>
+      <div class="section-rule"></div>
+      <blockquote><strong>Quais companhias aéreas apresentaram a maior quantidade de voos atrasados no período analisado?</strong></blockquote>
+      <p>Foi escolhida para validação porque envolve <strong>ranking por contagem</strong> — um tipo de resposta que pode ser verificado de forma direta e inequívoca com uma consulta SQL independente.</p>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="genie" class="card" aria-labelledby="titulo-genie">
+      <h2 class="section-title" id="titulo-genie"><span class="section-number">5</span> Resposta Obtida pelo Genie Agent</h2>
+      <div class="section-rule"></div>
+      <p>O Genie Agent identificou as <strong>10 companhias aéreas com maior quantidade de voos atrasados</strong> (partida com atraso &gt; 15 min):</p>
+      <div class="table-wrap" role="region" aria-label="Ranking de companhias aéreas" tabindex="0">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Companhia Aérea</th><th class="num">Voos Atrasados</th><th class="num">Voos Avaliados</th><th class="num">% Atraso</th><th class="num">Atraso Médio (min)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="rank">1</td><td>TAM LINHAS AÉREAS S.A.</td><td class="num">57.440</td><td class="num">293.095</td><td class="num">19,60%</td><td class="num">39,5</td></tr>
+            <tr><td class="rank">2</td><td>AZUL LINHAS AÉREAS BRASILEIRAS S/A</td><td class="num">38.865</td><td class="num">273.473</td><td class="num">14,21%</td><td class="num">55,1</td></tr>
+            <tr><td class="rank">3</td><td>GOL LINHAS AÉREAS S.A. (EX-VRG)</td><td class="num">35.074</td><td class="num">251.555</td><td class="num">13,94%</td><td class="num">50,2</td></tr>
+            <tr><td class="rank">4</td><td>TAP - TRANSPORTES AÉREOS PORTUGUESES S/A</td><td class="num">4.120</td><td class="num">10.106</td><td class="num">40,77%</td><td class="num">43,3</td></tr>
+            <tr><td class="rank">5</td><td>AEROLINEAS ARGENTINAS S/A</td><td class="num">2.313</td><td class="num">8.033</td><td class="num">28,79%</td><td class="num">57,6</td></tr>
+            <tr><td class="rank">6</td><td>LATAM AIRLINES GROUP (EX-LAN)</td><td class="num">2.308</td><td class="num">12.763</td><td class="num">18,08%</td><td class="num">45,4</td></tr>
+            <tr><td class="rank">7</td><td>AZUL CONECTA LTDA. (EX TWO TAXI AEREO)</td><td class="num">1.694</td><td class="num">10.857</td><td class="num">15,60%</td><td class="num">59,8</td></tr>
+            <tr><td class="rank">8</td><td>AVIANCA (AEROVIAS DEL CONTINENTE)</td><td class="num">1.172</td><td class="num">5.277</td><td class="num">22,21%</td><td class="num">53,2</td></tr>
+            <tr><td class="rank">9</td><td>SOCIÉTÉ AIR FRANCE</td><td class="num">1.085</td><td class="num">3.211</td><td class="num">33,79%</td><td class="num">65,0</td></tr>
+            <tr><td class="rank">10</td><td>AMERICAN AIRLINES, INC.</td><td class="num">994</td><td class="num">4.481</td><td class="num">22,18%</td><td class="num">181,8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="conclusoes-genie" class="card" aria-labelledby="titulo-conclusoes-genie">
+      <h2 class="section-title" id="titulo-conclusoes-genie"><span class="section-number">6</span> Principais conclusões do Genie</h2>
+      <div class="section-rule"></div>
+      <div class="grid">
+        <div class="mini-card"><h3>Maior volume absoluto</h3><p>TAM (LATAM doméstica) lidera em volume absoluto de atrasos, com <strong>57.440 voos</strong>.</p></div>
+        <div class="mini-card"><h3>Concentração doméstica</h3><p>As três maiores companhias domésticas — TAM, AZUL e GOL — concentram a maior parte dos atrasos.</p></div>
+        <div class="mini-card"><h3>Maior taxa percentual</h3><p>TAP tem a maior taxa percentual de atraso entre as companhias de maior volume: <strong>40,77%</strong>.</p></div>
+        <div class="mini-card"><h3>Maior atraso médio</h3><p>American Airlines apresenta o maior atraso médio, com <strong>181,8 min</strong>, indicando atrasos extremos.</p></div>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="consulta" class="card" aria-labelledby="titulo-consulta">
+      <h2 class="section-title" id="titulo-consulta"><span class="section-number">7</span> Consulta SQL de validação</h2>
+      <div class="section-rule"></div>
+      <p>A consulta abaixo foi registrada no notebook como validação independente da resposta do Genie Agent.</p>
+      <details open>
+        <summary>Exibir ou ocultar consulta SQL completa</summary>
+        <div class="details-body">
+          <div class="code-shell">
+            <span class="code-label">SQL</span>
+            <pre><code>-- ============================================================================
+-- VALIDAÇÃO SQL: Companhias aéreas com maior quantidade de voos atrasados
+-- ============================================================================
+-- Esta consulta valida de forma independente a resposta do Genie Agent.
+-- Critério: partida_pontual = FALSE (atraso de partida &gt; 15 minutos)
+-- Filtro: companhias com mais de 100 voos atrasados (remove ruído)
+-- ============================================================================
+
+SELECT
+  nome_companhia,
+  SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) AS voos_atrasados,
+  SUM(CASE WHEN partida_pontual IS NOT NULL THEN 1 ELSE 0 END) AS voos_avaliados,
+  ROUND(
+    SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) * 100.0
+    / NULLIF(SUM(CASE WHEN partida_pontual IS NOT NULL THEN 1 ELSE 0 END), 0),
+    2
+  ) AS pct_atraso,
+  ROUND(AVG(CASE WHEN partida_pontual = FALSE THEN atraso_partida_min END), 1) AS atraso_medio_min
+FROM voebem.gold.fato_voos
+GROUP BY nome_companhia
+HAVING SUM(CASE WHEN partida_pontual = FALSE THEN 1 ELSE 0 END) &gt; 100
+ORDER BY voos_atrasados DESC
+LIMIT 10</code></pre>
+          </div>
+        </div>
+      </details>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="resultado" class="card" aria-labelledby="titulo-resultado">
+      <h2 class="section-title" id="titulo-resultado"><span class="section-number">8</span> Resultado esperado</h2>
+      <div class="section-rule"></div>
+      <p>Se a resposta do Genie Agent estiver correta, a consulta SQL deve retornar exatamente o mesmo ranking:</p>
+      <ol>
+        <li>TAM LINHAS AÉREAS S.A. — ~57.440 voos atrasados</li>
+        <li>AZUL LINHAS AÉREAS BRASILEIRAS S/A — ~38.865 voos atrasados</li>
+        <li>GOL LINHAS AÉREAS S.A. — ~35.074 voos atrasados</li>
+        <li>TAP — ~4.120 voos atrasados</li>
+        <li>AEROLINEAS ARGENTINAS — ~2.313 voos atrasados</li>
+      </ol>
+      <div class="callout">
+        <p>Os valores de <code>voos_atrasados</code>, <code>voos_avaliados</code>, <code>pct_atraso</code> e <code>atraso_medio_min</code> devem coincidir com os números apresentados pelo Genie Agent.</p>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="validacao" class="card" aria-labelledby="titulo-validacao">
+      <h2 class="section-title" id="titulo-validacao"><span class="section-number">9</span> Conclusão da validação</h2>
+      <div class="section-rule"></div>
+      <h3>Critérios de confirmação registrados</h3>
+      <ul>
+        <li><strong>Confirmada:</strong> o ranking e os valores numéricos coincidem integralmente.</li>
+        <li><strong>Parcialmente confirmada:</strong> o ranking coincide, mas há diferenças em alguns valores.</li>
+        <li><strong>Não confirmada:</strong> o ranking ou os valores divergem significativamente.</li>
+      </ul>
+      <h3>Avaliação registrada no notebook</h3>
+      <p>A consulta SQL validou de forma independente a resposta do Genie Agent usando a mesma tabela (<code>voebem.gold.fato_voos</code>) e o mesmo critério de atraso (<code>partida_pontual = FALSE</code>). O resultado da consulta deve retornar exatamente os mesmos números apresentados na tabela da resposta do Genie, confirmando que:</p>
+      <ol>
+        <li><strong>TAM (LATAM doméstica)</strong> lidera com 57.440 voos atrasados (19,60% de taxa de atraso).</li>
+        <li><strong>AZUL</strong> e <strong>GOL</strong> completam o pódio com 38.865 e 35.074 voos atrasados, respectivamente.</li>
+        <li><strong>TAP</strong> se destaca pela maior taxa percentual (40,77%) entre as companhias de maior volume.</li>
+        <li><strong>American Airlines</strong> apresenta o maior atraso médio (181,8 min), sugerindo atrasos extremos pontuais.</li>
+      </ol>
+      <div class="callout success">
+        <p><strong>Status: ✅ Resposta CONFIRMADA pelos dados.</strong></p>
+        <p>A consulta SQL independente retornou os mesmos valores, validando que a resposta do Genie Agent foi precisa, clara e corretamente interpretada a partir dos dados da camada Gold.</p>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="performance" class="card" aria-labelledby="titulo-performance">
+      <h2 class="section-title" id="titulo-performance"><span class="section-number">10</span> Performance e Métricas</h2>
+      <div class="section-rule"></div>
+      <div class="metric-grid">
+        <div class="metric"><span class="value">10</span><span class="label">Companhias no ranking</span></div>
+        <div class="metric"><span class="value">57.440</span><span class="label">Maior contagem de voos atrasados</span></div>
+        <div class="metric"><span class="value">40,77%</span><span class="label">Maior taxa destacada</span></div>
+        <div class="metric"><span class="value">181,8 min</span><span class="label">Maior atraso médio destacado</span></div>
+      </div>
+      <details>
+        <summary>Exibir métricas detalhadas e disponibilidade</summary>
+        <div class="details-body">
+          <ul>
+            <li><strong>Volume por companhia, voos avaliados, percentual e atraso médio:</strong> disponíveis na tabela do Genie.</li>
+            <li><strong>Tempo de execução:</strong> esta métrica não foi encontrada no notebook.</li>
+            <li><strong>Duração da consulta:</strong> esta métrica não foi encontrada no notebook.</li>
+            <li><strong>Volume total processado:</strong> esta métrica não foi encontrada no notebook.</li>
+            <li><strong>Particionamento:</strong> informação não encontrada no notebook.</li>
+            <li><strong>Plano de execução:</strong> informação não encontrada no notebook.</li>
+            <li><strong>Métricas de qualidade:</strong> informação não encontrada no notebook.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="callout attention" style="margin-top:1rem">
+        <p>O export fornecido registra o conteúdo da validação e a conclusão, mas não inclui tempos, plano de execução ou estatísticas físicas. Nenhuma dessas métricas foi estimada.</p>
+      </div>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+
+    <section id="dados-tecnicos" class="card" aria-labelledby="titulo-dados-tecnicos">
+      <h2 class="section-title" id="titulo-dados-tecnicos"><span class="section-number">11</span> Dados técnicos adicionais</h2>
+      <div class="section-rule"></div>
+      <div class="grid">
+        <div class="mini-card">
+          <h3>Colunas utilizadas na validação</h3>
+          <p><code>voebem.gold.fato_voos</code>:</p>
+          <ul><li><code>nome_companhia</code></li><li><code>partida_pontual</code></li><li><code>atraso_partida_min</code></li></ul>
+        </div>
+        <div class="mini-card">
+          <h3>Colunas citadas da dimensão</h3>
+          <p><code>voebem.gold.dim_aeroporto</code>:</p>
+          <ul><li><code>icao_aeroporto</code></li><li><code>nome_aeroporto</code></li><li><code>municipio_aeroporto</code></li><li><code>uf_aeroporto</code></li></ul>
+        </div>
+      </div>
+      <details>
+        <summary>Exibir disponibilidade de esquema e amostras</summary>
+        <div class="details-body">
+          <p class="not-found"><strong>Esquema completo das tabelas:</strong> Informação não encontrada no notebook.</p>
+          <p class="not-found"><strong>Amostras de dados brutos:</strong> Informação não encontrada no notebook.</p>
+          <p class="not-found"><strong>Próximos passos:</strong> Informação não encontrada no notebook.</p>
+        </div>
+      </details>
+      <a class="top-link" href="#topo">↑ Voltar ao topo</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p><strong>Relatório gerado a partir do notebook de origem <code>gold_validacao_sql</code>.</strong></p>
+      <p>Os dados, códigos, resultados, conclusões e ausências foram preservados conforme o conteúdo original fornecido.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var button = document.getElementById('theme-toggle');
+      var label = document.getElementById('theme-label');
+      var icon = document.getElementById('theme-icon');
+
+      function updateControl() {
+        var dark = root.getAttribute('data-theme') === 'dark';
+        var action = dark ? 'Ativar Light Mode' : 'Ativar Dark Mode';
+        label.textContent = action;
+        icon.textContent = dark ? '☀' : '☾';
+        button.setAttribute('aria-label', action);
+        button.setAttribute('title', action);
+        button.setAttribute('aria-pressed', String(dark));
+      }
+
+      button.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('notebook-report-theme', next); } catch (e) { /* Light remains the safe default. */ }
+        updateControl();
+      });
+
+      updateControl();
+    }());
+  </script>
+</body>
+</html>

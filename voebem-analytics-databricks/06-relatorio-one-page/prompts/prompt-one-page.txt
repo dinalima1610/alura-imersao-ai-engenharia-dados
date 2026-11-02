@@ -1,0 +1,297 @@
+✨Prompt para gerar o relatório HTML One Page
+
+No arquivo zip em anexo, para gerar um relatório HTML One Page, há:
+
+1. **PDF:** relatório de origem, com o conteúdo, os gráficos, as tabelas e as figuras a preservar.
+2. **TXT:** Response da análise, com consultas SQL, resultados, métricas, explicações e a lista final `Sources`.
+3. **HTML:** exemplo aprovado para o padrão visual, organização, estilos e comportamentos da página.
+4. **PNG:** imagens contidas no relatório em PDF, a serem usadas como referência ou incorporadas quando não for possível reconstruir fielmente.
+5. **CSV:** tabelas contidas no relatório em PDF, a serem usadas para reconstruir tabelas e gráficos.
+
+
+### Objetivo
+
+Criar um único arquivo HTML autocontido, pronto para download, usando:
+o PDF como fonte principal e obrigatória do conteúdo;
+o TXT apenas para complementar, fundamentar e rastrear consultas SQL, métricas e fontes;
+o HTML como referência visual obrigatória.
+
+IMPORTANTE SOBRE O HTML:
+Seguir EXATAMENTE o padrão visual aprovado, mantendo-o funcional e responsivo.
+
+O relatório One Page deve melhorar a apresentação visual do relatório gerado no Databricks, sem alterar sua lógica, sua sequência ou seu conteúdo.
+
+
+### Regra principal de conteúdo
+
+Coloque no relatório One Page todos os dados, seções, textos, tabelas, gráficos, conclusões e informações do PDF, na mesma sequência lógica em que aparecem no PDF.
+
+Não remova, não resuma excessivamente, não reorganize e não substitua seções do PDF por conteúdo do TXT.
+
+O relatório One Page pode acrescentar apenas estas seções estruturais:
+o Sumário
+o Resumo Executivo
+o Fontes das Análises
+
+Tudo o que consta no PDF deve ficar entre as seções Resumo Executivo e Fontes das Análises, preservando a ordem original.
+
+Acréscimos vindos do TXT são permitidos somente como complementos explicativos ou rastreáveis, próximos à informação correspondente do PDF, dentro de grupos recolhíveis inicialmente fechados.
+
+
+### Uso correto do TXT
+
+Use somente a versão final consolidada do relatório no TXT, localizada após o Prompt 3, a partir do título “Análise Completa de Pontualidade e Atrasos de Voos no Brasil”, até “Sources (15)”.
+Ignore prompts, thought process, SQLs e versões intermediárias anteriores, exceto quando forem necessários para rastrear uma consulta ou uma verificação citada na versão final.
+
+O conteúdo principal visível do relatório deve vir do PDF. O TXT deve ser usado para:
+o recuperar consultas SQL;
+o recuperar resultados detalhados;
+o recuperar métricas complementares;
+o recuperar verificações de denominadores;
+o fundamentar a lista Sources;
+o criar grupos recolhíveis de rastreabilidade.
+
+o Não copie para dentro dos grupos de fontes trechos que já fazem parte do PDF como conteúdo principal.
+
+Exemplo importante:
+
+Se o PDF contém:
+
+“Contexto dos Dados
+Período e Volume: Os dados disponíveis cobrem agosto/2025 a agosto/2026 parcial...”
+
+isso deve aparecer no corpo principal do relatório, como conteúdo do PDF.
+
+O grupo recolhível “Fonte 1 · Visão geral dos dados” deve conter a consulta e o resultado do TXT que fundamentam essa informação, por exemplo:
+
+“
+Visão geral dos dados
+Used tables: obt_voos
+
+SELECT
+  COUNT(*) AS quantidade_voos,
+  COUNT(DISTINCT nome_companhia) AS companhias,
+  COUNT(DISTINCT rota_icao) AS rotas,
+  MIN(partida_prevista_data) AS inicio_periodo,
+  MAX(partida_prevista_data) AS fim_periodo
+FROM
+  voebem.gold.obt_voos
+
+
+quantidade_voos	companhias	rotas	inicio período	fim_periodo
+1,014,664 	118		3104	2025-08-01	2026-08-01
+”
+
+o Não coloque no grupo apenas o texto do PDF repetido.
+o Para cada grupo recolhível de fonte, extraia somente o trecho específico do TXT que corresponde àquela fonte: consulta SQL, tabelas usadas, resultado tabular, métrica ou verificação diretamente relacionada.
+o Não inclua no grupo conteúdo de fontes anteriores ou posteriores.
+o Não use blocos longos contínuos do Response quando apenas uma consulta ou resultado específico for necessário.
+o Se uma fonte não tiver trecho claramente delimitável no TXT, não preencha com conteúdo aproximado nem com partes de outras fontes. Nesse caso, indique de forma curta que a fonte foi identificada na lista, mas o trecho correspondente não pôde ser isolado com segurança.
+o Remova linhas separadoras copiadas do TXT, como sequências de underline (_____), quando elas não tiverem valor informativo.
+o Remova números soltos ao final de frases quando eles forem apenas marcadores de fonte do Response, como 1, 2, 3. Em vez disso, use links discretos para as fontes correspondentes.
+
+
+### Estrutura do relatório
+
+A estrutura final deve ser:
+o Cabeçalho / Hero
+o Sumário
+o Resumo Executivo
+o Todas as seções do PDF, na ordem em que aparecem
+o Fontes das Análises
+o Rodapé final com a nota metodológica única
+
+O item de Principais Conclusões deve obrigatoriamente existir, criado a partir da seção “Consolidação Final: Principais Conclusões” do PDF. Não omita essa seção.
+
+
+### Conteúdo e rastreabilidade
+
+o Preserve as conclusões, seções, números e contexto relevantes do PDF, na ordem original.
+o Consulte o TXT inteiro, mas use como conteúdo final apenas o relatório consolidado revisado.
+o Acrescente consultas SQL, resultados, métricas e explicações finais do TXT somente quando ajudarem a entender ou verificar uma análise específica do PDF, não devendo haver repetição e mantendo cada complemento restrito à fonte correspondente.
+o Coloque cada complemento próximo da seção correspondente.
+o Apresente SQL, resultados detalhados e informações complementares em grupos recolhíveis com `<details>` e `<summary>`, **fechados inicialmente**.
+o Dê a cada grupo um título claro, por exemplo: Fonte 4 · Aeroportos brasileiros com maiores atrasos de partida.
+o Não coloque frases operacionais dentro dos grupos, como “Trecho recuperado do TXT usado para fundamentar esta fonte”.
+o Remova qualquer texto de raciocínio, planejamento, transição ou narração operacional do Genie/assistente, incluindo frases como:
+- “Agora vou criar as visualizações...”
+- “Agora vou gerar o relatório...”
+- “Vou buscar a segunda página...”
+- “Perfeito! Agora vou preparar...”
+
+o Os grupos de fonte devem conter apenas evidências verificáveis: SQL, tabelas usadas, resultados, métricas, o filtros, denominadores e explicações finais relevantes. Não inclua pensamentos, etapas narrativas, mensagens de processo ou comentários intermediários.
+o Não invente SQL, números, tempos de execução ou métricas de performance.
+o Se não conseguir localizar uma fonte, consulta, tabela ou resultado solicitado, não infira e não invente: interrompa e indique exatamente o que precisa ser confirmado.
+
+
+### Nota metodológica final
+
+A nota a seguir deve aparecer uma única vez, como a última informação do relatório, no rodapé final.
+Não repita essa nota na seção “Fontes das Análises” nem em qualquer outro ponto do relatório.
+Texto sugerido, podendo melhorar a redação sem mudar o sentido:
+“Fonte complementar: o Response gerado pelo Databricks Genie foi recuperado e utilizado para fundamentar consultas SQL, métricas, resultados detalhados e a lista de fontes da análise. Para evitar duplicidade ou contradições, o conteúdo final considera apenas a versão consolidada revisada do Response.”
+
+
+### Performance e métricas
+
+o Não inclua comentários internos sobre ausência de arquivo, limitações do ambiente ou uso do workspace.
+o Não coloque dentro de cada grupo frases operacionais como “Trecho recuperado do TXT usado para fundamentar esta fonte”. 
+o Inclua a seção ou box “Performance e métricas” somente com os dados efetivamente disponíveis.
+o Se não houver tempo de execução ou outra métrica técnica específica, diga expressamente:
+“Performance e métricas: os anexos trazem contagens, filtros, denominadores e resultados analíticos. Não há no material tempo de execução, custo computacional, duração de consulta ou métrica técnica de performance do Databricks/Genie; por isso nenhuma dessas métricas foi exibida.”
+
+
+### Gráficos, tabelas e imagens
+
+o Examine cada figura do PDF antes de incorporá-la. 
+o **Não aumente uma imagem pequena e não use interpolação ou aumento de DPI como se isso recuperasse detalhes que não existem.**
+o Sempre que os valores necessários estiverem no PDF, TXT ou CSV, **reconstrua gráficos como SVG embutido no HTML**, com texto e linhas nítidos em qualquer escala. 
+o Use os dados reais, mantenha rótulos, unidades, ordem e significado. 
+o Defina as cores do SVG para combinar com os temas Dark e Light do relatório.
+o Não transforme tabela em gráfico quando o PDF apresenta tabela.
+o Não transforme gráfico em tabela quando o PDF apresenta gráfico.
+o Se o PDF traz uma tabela, recrie-a como tabela HTML, legível, responsiva e selecionável. sempre que seus dados puderem ser recuperados com segurança.
+o Se o PDF traz um gráfico, reconstrua-o como SVG quando os dados estiverem disponíveis.
+o Se uma figura não puder ser reconstruída fielmente, extraia a imagem original diretamente do PDF na melhor qualidade disponível, incorpore-a sem perda adicional e mostre-a em tamanho compatível com sua resolução.
+o Não invente valores para completar gráficos ou tabelas.
+o Confira a nitidez de títulos, rótulos, eixos e números nas figuras em desktop e celular.
+
+
+### Legendas de gráficos e figuras
+
+o As legendas dos gráficos e figuras não devem explicar o processo de reconstrução nem dizer de onde vieram os dados, como:
+“Visualização reconstruída em SVG a partir dos valores do PDF/TXT”
+“Visualização reconstruída em SVG a partir dos percentuais do relatório”
+“Gráfico reconstruído em SVG a partir do CSV...”
+
+o Em vez disso, escreva uma legenda curta explicando o que o gráfico mostra, por exemplo:
+“Ranking dos dez aeroportos com maior percentual de atrasos de partida.”
+“Comparação de atrasos entre voos domésticos e internacionais.”
+“Percentual de pontualidade e cancelamento por companhia.”
+“Evolução do atraso médio e do percentual de atrasos ao longo do dia.”
+
+o Logo próximo à legenda ou ao bloco visual, inclua um link discreto para a fonte correspondente, por exemplo:
+<a href="#src-4" data-open-detail="src-4">Ver fonte da análise</a>
+O valor de href e data-open-detail deve apontar para o mesmo destino correto. Não crie links divergentes, como href="#src-8" com data-open-detail="src-7".
+
+
+### Cuidados com gráficos SVG
+
+o Nos gráficos de barra, garanta que os valores no lado direito das barras não sejam cortados.
+o Reserve margem interna suficiente à direita e à esquerda.
+o Não deixe sobrar espaço excessivo de um lado enquanto rótulos ou percentuais são cortados do outro.
+o Antes de finalizar, confira:
+. nenhum rótulo cortado horizontalmente;
+. nenhum rótulo cortado verticalmente;
+. valores à direita das barras visíveis;
+. eixos e legendas legíveis;
+. SVG responsivo em telas pequenas;
+. tabelas com rolagem horizontal quando necessário.
+
+
+### Links internos das fontes
+
+o Localize a lista `Sources` ao final do TXT e confira sua contagem **item por item**. O marcador `Sources (15)` não é prova suficiente de que há 15 itens identificáveis: se o TXT trouxer menos títulos ou algum item incompleto, não invente o faltante. Confira os itens reais.
+o Inclua ao final do HTML uma seção **Fontes das análises** com todos os itens identificáveis, na ordem original.
+o Transforme cada item em um hiperlink interno (`href="#..."`) que leve **diretamente ao elemento correspondente** na própria página: consulta SQL, gráfico, tabela ou resultado que fundamenta aquela fonte. 
+o Atribua um `id` único ao destino de cada fonte, por exemplo src-1, src-2, src-3.
+o Se o destino estiver dentro de um `<details>` fechado, garanta que clicar na fonte abra o grupo antes de rolar até o elemento. 
+o Use JavaScript embutido somente se necessário.
+o Verifique que **cada link leva ao destino correto**, sem links quebrados, destinos genéricos ou vários itens apontando indevidamente para a mesma seção.
+
+o Na seção Fontes das Análises, não duplique a numeração.
+
+Se usar <ol>, o texto do item não deve começar com 1., 2., 3..
+
+Correto:
+
+`<ol>
+
+  <li><a href="#src-1">Visão geral dos dados</a></li>
+  <li><a href="#src-2">Verificação de totais - dia da semana</a></li>
+</ol>`
+
+Incorreto:
+
+`<ol>
+
+  <li><a href="#src-1">1. Visão geral dos dados</a></li>
+  <li><a href="#src-2">2. Verificação de totais - dia da semana</a></li>
+</ol>`
+
+o A seção Fontes das Análises deve seguir o mesmo estilo visual do Sumário: links sem sublinhado por padrão, sublinhado apenas ao passar o mouse, espaçamento limpo e hierarquia visual discreta.
+
+
+### Aparência e funcionamento
+
+o O padrão visual aprovado DEVE ser seguido OBRIGATORIAMENTE. O HTML de exemplo é referência visual obrigatória.
+o Siga tipografia, hierarquia visual, cards, seções, tabelas, boxes, grupos recolhíveis, espaçamentos e comportamento geral.
+o Use uma imagem ou padrão visual sutil de background no cabeçalho/hero, como no exemplo visual, sem depender de arquivos externos. Pode ser SVG ou padrão embutido.
+o O botão de alternância de tema deve ficar sempre visível durante a rolagem, com position: fixed, no canto superior direito.
+o O botão de tema deve ter ícone colorido à esquerda do texto, como no HTML de referência: sol colorido no modo Dark/alternância para Light e lua colorida no modo Light/alternância para Dark.
+o O ícone, o texto, o aria-label, o title e o aria-pressed devem ser atualizados corretamente ao alternar o tema.
+o O **Light Mode deve ser o tema padrão**, independentemente das configurações do sistema. 
+o Ofereça um botão para alternar manualmente para Dark Mode e salve a escolha em `localStorage`.
+o Não use prefers-color-scheme para escolher o tema.
+o Defina explicitamente, para os dois temas, cores de página, cabeçalho, cards, textos, links, títulos, bordas, código, tabelas, destaques e gráficos.
+o Tabelas devem ter hover de linha: ao passar o mouse, a linha deve ficar levemente iluminada, respeitando o tema ativo.
+o Boxes de destaque como “Resultado”, “Destaque”, “Exceção”, “Atenção” ou “Leitura” devem usar o mesmo padrão do exemplo: fundo suave, borda lateral, cantos arredondados e boa legibilidade.
+o Grupos recolhíveis devem usar ícones de aberto e fechado diferentes de “+” e “-”, por exemplo ▸ fechado e ▾ aberto, ou equivalentes.
+o Todos os grupos complementares devem iniciar fechados, exceto se o conteúdo principal exigir explicitamente o contrário.
+o Ao final de cada seção principal, inclua link “↑ Voltar ao topo”, apontando para o início da página.
+o Faça gráficos, tabelas e grupos recolhíveis funcionarem em telas pequenas sem cortar informações relevantes.
+o Mantenha todo o CSS e JavaScript necessários dentro do próprio HTML.
+o O arquivo deve funcionar localmente, sem rede, Databricks ou arquivos auxiliares.
+o Remova scripts externos, links externos de CSS ou qualquer injeção de navegador/antivírus que apareça nos anexos.
+
+
+### Cabeçalho e título
+
+o No cabeçalho, o título “Análise Completa de Pontualidade e Atrasos de Voos no Brasil” deve usar o máximo possível da largura útil disponível antes de quebrar linha.
+o O título deve estar centralizado horizontalmente.
+o Não deixe espaço horizontal desperdiçado à direita que force quebra de linha cedo demais.
+o Apenas o título deve ser centralizado; os demais elementos do cabeçalho devem seguir o padrão visual do HTML de referência, salvo se o próprio exemplo indicar outro comportamento.
+
+
+### Entrega e conferência
+
+Gere o arquivo como `Relatório [nome da origem pdf].html`.
+
+
+### Antes de entregar, abra ou renderize o HTML final e confira:
+
+o conteúdo do PDF preservado integralmente;
+o todas as seções do PDF presentes no relatório One Page;
+o todas as informações do PDF colocadas no relatório One Page;
+o ordem das seções fiel ao PDF;
+o Sumário criado;
+o Resumo Executivo criado;
+o Fontes das Análises criada;
+o seção de Principais Conclusões criada a partir da consolidação final do PDF;
+o complementos do TXT posicionados próximos às informações correspondentes;
+o informações do PDF não duplicadas dentro de grupos de fontes;
+o grupos de fontes contendo consultas, resultados ou verificações reais do TXT;
+o linhas separadoras inúteis do TXT removidas;
+o números soltos de fontes removidos do corpo do texto;
+o gráficos reconstruídos em SVG quando possível;
+o tabelas preservadas como tabelas, e não transformadas em gráficos;
+o gráficos preservados como gráficos, e não transformados em tabelas;
+o legendas dos gráficos explicando o conteúdo, não o processo de reconstrução;
+o links de fonte próximos aos gráficos, tabelas ou análises correspondentes;
+o nenhum rótulo, percentual ou legenda de gráfico cortado;
+o gráficos e imagens nítidos e nas cores dos temas;
+o tabelas legíveis e responsivas;
+o grupos complementares fechados inicialmente;
+o alternância Light/Dark funcional;
+o botão de tema fixo e sempre visível;
+o ícone colorido no botão de tema, conforme o HTML de referência;
+o ícones corretos nos grupos abertos/fechados;
+o hover de linhas em tabelas;
+o boxes de destaque arredondados;
+o links “Voltar ao topo” nas seções principais;
+o todos os links de Sources funcionando, inclusive os que apontam para grupos fechados;
+o seção Fontes das Análises sem numeração duplicada;
+o nota “Fonte complementar” aparecendo uma única vez, no rodapé final;
+o ausência de dependências externas.
+
+Ao final, disponibilize o link do HTML final para download.

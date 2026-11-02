@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Relatório One Page — bronze_validation</title>
+  <script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=wDOyiMVNI4h6wG4I2YNgGEtA4LEFCcoMHLnP_A-h8LNfko650t69PJKFsNKD8dx7aQW-vgxiJvc-BvNHbvoIGaNoBJqSnxfQPI1BJ6j3KkZp6dsybHPJjrIEEGWIuey_k5cpPMrqhMOso6z_0njmwK_RO2OLGXn4qp1T7G3L6i0VLjfmHJ78lem1gcCuOEJyPBDfYYT1rMIAUlWiROszD6oUPA3fM6eQvUm9jYtBqEIeeRt3kBK957z0j-0DPlmMDJqxVydqxz-5adCB3j_K-8lz5pCd0KKlFtxcNa5ruPxSiKQKbrp6yRV8cUMa4OdUBwJOcFXg4MQGg-epgq_f9pAycXLORmPfTkrzyxy3dtE" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ_aWQ9ZmlsZV8wMDAwMDAwMGYzNjg4MjBlOWIzZTMxNjUzYjM5ZTAyOCZmbj1yZWxhdG9yaW9fbm90ZWJvb2tfYnJvbnplX3ZhbGlkYXRpb24uaHRtbCZjZD1hdHRhY2htZW50JnRzPTQ5NzE1NyZwPWZzJmNpZD0xJnNpZz02YmVmMDNjMWUwMTI0MzViNDQwMTUzZmI2ZjRjMGRkYTI5MWFmZDE4OTdjOTc1YjMyODQ5YjJiYjNkOTg4MzdiJnY9MA"/><script>
+    (function () {
+      try {
+        if (localStorage.getItem('relatorio-notebook-theme') === 'light') {
+          document.documentElement.dataset.theme = 'light';
+        }
+      } catch (e) { /* Dark mode permanece como padrão. */ }
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page-bg: #0b0f14;
+      --header-bg: #111820;
+      --header-bg-2: #162431;
+      --card-bg: #131a22;
+      --card-bg-alt: #18212b;
+      --text: #e7edf3;
+      --text-muted: #9aa8b5;
+      --title: #f4f8fb;
+      --link: #61b5ff;
+      --link-hover: #9bd0ff;
+      --border: #2b3946;
+      --border-strong: #405363;
+      --accent: #ff5f46;
+      --accent-2: #ff8a65;
+      --accent-soft: #38201e;
+      --code-bg: #080c10;
+      --code-text: #d9e8f2;
+      --code-border: #2f3d49;
+      --table-head: #202b36;
+      --table-row: #131a22;
+      --table-row-alt: #171f28;
+      --table-hover: #21303d;
+      --success: #61d095;
+      --success-soft: #143326;
+      --warning: #ffc66d;
+      --highlight-bg: #1a2b38;
+      --highlight-border: #46a9f4;
+      --null: #f39ab5;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .28);
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --page-bg: #f3f6f8;
+      --header-bg: #17212b;
+      --header-bg-2: #243746;
+      --card-bg: #ffffff;
+      --card-bg-alt: #f7f9fb;
+      --text: #24313c;
+      --text-muted: #647381;
+      --title: #15202a;
+      --link: #0969a9;
+      --link-hover: #064f80;
+      --border: #d6dee5;
+      --border-strong: #b9c5ce;
+      --accent: #d9432d;
+      --accent-2: #c73521;
+      --accent-soft: #fff0ed;
+      --code-bg: #18212b;
+      --code-text: #eef6fb;
+      --code-border: #3b4b58;
+      --table-head: #263746;
+      --table-row: #ffffff;
+      --table-row-alt: #f4f7f9;
+      --table-hover: #e5f2fb;
+      --success: #177a4b;
+      --success-soft: #e7f6ee;
+      --warning: #865500;
+      --highlight-bg: #eaf5fc;
+      --highlight-border: #1879b7;
+      --null: #9d2851;
+      --shadow: 0 8px 24px rgba(22, 39, 54, .10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 78px; }
+    body { margin: 0; background: var(--page-bg); color: var(--text); font: 16px/1.62 "Segoe UI", Inter, Arial, sans-serif; }
+    a { color: var(--link); } a:hover { color: var(--link-hover); }
+    .hero { background: linear-gradient(135deg, var(--header-bg), var(--header-bg-2)); border-bottom: 1px solid var(--border-strong); padding: 64px 24px 50px; }
+    .hero-inner, main { width: min(1120px, calc(100% - 40px)); margin: auto; }
+    .eyebrow { color: var(--accent-2); font-size: .79rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { color: #fff; font-size: clamp(2rem, 5vw, 3.35rem); letter-spacing: -.035em; line-height: 1.07; margin: 12px 0 16px; }
+    .lead { color: #d5e0e8; max-width: 850px; font-size: 1.08rem; margin: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .meta span, .pill { border: 1px solid var(--border-strong); border-radius: 999px; color: var(--text-muted); padding: 4px 10px; font-size: .78rem; }
+    .hero .meta span { color: #bdc9d2; background: rgba(255,255,255,.035); }
+    .theme-toggle { position: fixed; z-index: 20; top: 16px; right: 16px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--card-bg); color: var(--text); box-shadow: var(--shadow); cursor: pointer; font: inherit; font-size: .84rem; font-weight: 650; padding: 9px 14px; }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent-2); }
+    main { padding: 34px 0 58px; }
+    nav, .card, .metric { background: var(--card-bg); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    nav { border-radius: 14px; padding: 22px 24px; margin-bottom: 42px; }
+    nav h2 { font-size: 1rem; margin: 0 0 12px; }
+    nav ol { columns: 2; column-gap: 40px; margin: 0; padding-left: 22px; }
+    nav li { break-inside: avoid; padding: 3px 0; }
+    nav a { text-decoration: none; }
+    section { margin: 0 0 48px; }
+    .section-title { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); color: var(--title); font-size: 1.52rem; margin: 0 0 18px; padding: 0 0 12px; }
+    .num { align-items: center; background: var(--accent); border-radius: 9px; color: #fff; display: inline-flex; font-size: .9rem; height: 34px; justify-content: center; width: 34px; }
+    .card { border-radius: 14px; padding: 22px; margin-bottom: 16px; }
+    .card h3 { color: var(--title); margin: 0 0 8px; }
+    .card p:last-child { margin-bottom: 0; }
+    .highlight { background: var(--highlight-bg); border: 1px solid var(--border); border-left: 4px solid var(--highlight-border); border-radius: 0 10px 10px 0; padding: 14px 17px; margin: 14px 0; }
+    .success { background: var(--success-soft); border-left-color: var(--success); }
+    .checklist { list-style: none; padding: 0; } .checklist li { padding: 5px 0 5px 28px; position: relative; } .checklist li::before { content: "✓"; color: var(--success); font-weight: 800; left: 2px; position: absolute; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin: 16px 0; }
+    .metric { border-radius: 12px; padding: 17px 14px; text-align: center; }
+    .metric-value { color: var(--accent-2); font-size: 1.55rem; font-weight: 760; } .metric-label { color: var(--text-muted); font-size: .79rem; overflow-wrap: anywhere; }
+    code, pre { font-family: Consolas, "Liberation Mono", monospace; }
+    :not(pre) > code { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 5px; color: var(--code-text); font-size: .88em; padding: 2px 5px; }
+    pre { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 0 0 9px 9px; color: var(--code-text); line-height: 1.5; margin: 0; overflow: auto; padding: 17px; tab-size: 4; white-space: pre; }
+    .code-unit { margin: 0 0 18px; } .code-head { align-items: center; background: var(--table-head); border: 1px solid var(--code-border); border-bottom: 0; border-radius: 9px 9px 0 0; color: #f4f7fa; display: flex; justify-content: space-between; padding: 8px 12px; } .lang { color: #c1d0da; font-size: .72rem; letter-spacing: .1em; }
+    .query-label { color: var(--text-muted); font-size: .78rem; margin: 15px 0 5px; } .sample-card pre { border-radius: 9px; font-size: .8rem; margin-bottom: 16px; }
+    .table-wrap { border: 1px solid var(--border); border-radius: 10px; max-height: 520px; overflow: auto; }
+    table { border-collapse: separate; border-spacing: 0; font-size: .84rem; width: 100%; }
+    th { background: var(--table-head); color: #f5f8fa; position: sticky; top: 0; z-index: 1; }
+    th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 8px 10px; text-align: left; white-space: nowrap; }
+    th:last-child, td:last-child { border-right: 0; } tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:nth-child(odd) td { background: var(--table-row); } tbody tr:nth-child(even) td { background: var(--table-row-alt); } tbody tr:hover td { background: var(--table-hover); }
+    .null { color: var(--null); font-style: italic; }
+    details summary { align-items: center; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; font-weight: 700; list-style: none; } details summary::-webkit-details-marker { display: none; } details summary::before { color: var(--accent-2); content: "▸"; margin-right: 3px; } details[open] summary::before { content: "▾"; } details[open] summary { margin-bottom: 15px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    footer { background: var(--header-bg); border-top: 1px solid var(--border-strong); color: #aebbc5; padding: 28px 24px; text-align: center; }
+    @media (max-width: 720px) { nav ol { columns: 1; } .two-col { grid-template-columns: 1fr; } .hero-inner, main { width: min(100% - 28px, 1120px); } .hero { padding-top: 76px; } .card { padding: 16px; } }
+    @media print { .theme-toggle { display: none; } .card, nav, .metric { box-shadow: none; } details { break-inside: avoid; } .table-wrap { max-height: none; } }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar para o modo claro">☀ Modo claro</button>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Relatório técnico · Databricks</div>
+      <h1>Validação da Camada Bronze</h1>
+      <p class="lead">Consultas somente leitura para validar contagem, esquema e amostras das cinco tabelas da camada <code>voebem.bronze</code>.</p>
+      <div class="meta"><span>Notebook: bronze_validation</span><span>Linguagem: python</span><span>11 células</span><span>Sem dependências externas</span></div>
+    </div>
+  </header>
+  <main>
+    <nav aria-label="Sumário">
+      <h2>Sumário</h2>
+      <ol>
+        <li><a href="#objetivo">Objetivo</a></li><li><a href="#contexto">Contexto</a></li><li><a href="#tabelas">Tabelas analisadas</a></li><li><a href="#codigo">Código principal</a></li><li><a href="#contagem">Contagem de registros</a></li><li><a href="#esquema">Esquema das tabelas</a></li><li><a href="#amostras">Amostras de dados</a></li><li><a href="#performance">Performance e métricas</a></li><li><a href="#conclusao">Conclusão</a></li>
+      </ol>
+    </nav>
+
+    <section id="objetivo"><h2 class="section-title"><span class="num">1</span>Objetivo</h2><div class="card">
+      <p>Validar a ingestão das tabelas da camada Bronze por meio de três verificações documentadas no notebook:</p>
+      <ul class="checklist"><li><strong>Contagem de registros</strong> com <code>COUNT(*)</code>.</li><li><strong>Esquema</strong> com colunas, tipos, nulabilidade e comentários via <code>information_schema</code>.</li><li><strong>Amostra</strong> de até 10 registros com <code>SELECT * LIMIT 10</code>.</li></ul>
+      <div class="highlight"><strong>Escopo de segurança:</strong> nenhuma célula insere, atualiza ou exclui dados.</div>
+    </div></section>
+
+    <section id="contexto"><h2 class="section-title"><span class="num">2</span>Contexto</h2><div class="card">
+      <p>O notebook consulta o catálogo <code>voebem</code> e o schema <code>bronze</code>. A validação combina uma consulta consolidada de volume, uma consulta ao esquema de metadados e cinco consultas de amostra.</p>
+      <div class="two-col"><div class="highlight"><strong>Origem:</strong><br>HTML exportado do Databricks</div><div class="highlight"><strong>Tipo de análise:</strong><br>pós-ingestão, somente leitura</div></div>
+    </div></section>
+
+    <section id="tabelas"><h2 class="section-title"><span class="num">3</span>Tabelas analisadas</h2><div class="card">
+      <div class="table-wrap"><table class=""><thead><tr><th>#</th><th>Tabela completa</th></tr></thead><tbody><tr><td>1</td><td>voebem.bronze.aerodromos</td></tr><tr><td>2</td><td>voebem.bronze.codigos_operacao</td></tr><tr><td>3</td><td>voebem.bronze.empresas_estrangeiras</td></tr><tr><td>4</td><td>voebem.bronze.empresas_nacionais</td></tr><tr><td>5</td><td>voebem.bronze.vra</td></tr></tbody></table></div>
+    </div></section>
+
+    <section id="codigo"><h2 class="section-title"><span class="num">4</span>Código principal</h2><div class="card">
+      <p>Consultas SQL preservadas conforme o notebook exportado.</p><div class="code-unit"><div class="code-head"><span>Contagem de linhas por tabela</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 1: total de registros em cada tabela da Bronze
+-- Retorna o nome da tabela e sua contagem de linhas.
+SELECT &#x27;aerodromos&#x27;            AS tabela, COUNT(*) AS total_linhas FROM voebem.bronze.aerodromos
+UNION ALL
+SELECT &#x27;codigos_operacao&#x27;       AS tabela, COUNT(*) AS total_linhas FROM voebem.bronze.codigos_operacao
+UNION ALL
+SELECT &#x27;empresas_estrangeiras&#x27;  AS tabela, COUNT(*) AS total_linhas FROM voebem.bronze.empresas_estrangeiras
+UNION ALL
+SELECT &#x27;empresas_nacionais&#x27;     AS tabela, COUNT(*) AS total_linhas FROM voebem.bronze.empresas_nacionais
+UNION ALL
+SELECT &#x27;vra&#x27;                    AS tabela, COUNT(*) AS total_linhas FROM voebem.bronze.vra
+ORDER BY tabela</code></pre></div><div class="code-unit"><div class="code-head"><span>Esquema das tabelas Bronze</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 2: esquema completo das cinco tabelas da Bronze
+-- Retorna tabela, coluna, tipo de dado, se aceita nulo e comentário.
+SELECT
+    table_name   AS tabela,
+    column_name  AS coluna,
+    data_type    AS tipo,
+    is_nullable  AS permite_nulo,
+    comment
+FROM voebem.information_schema.columns
+WHERE table_schema = &#x27;bronze&#x27;
+  AND table_name IN (
+      &#x27;aerodromos&#x27;,
+      &#x27;codigos_operacao&#x27;,
+      &#x27;empresas_estrangeiras&#x27;,
+      &#x27;empresas_nacionais&#x27;,
+      &#x27;vra&#x27;
+  )
+ORDER BY table_name, ordinal_position</code></pre></div><div class="code-unit"><div class="code-head"><span>Amostra — aerodromos</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 3a: amostra de voebem.bronze.aerodromos
+SELECT * FROM voebem.bronze.aerodromos LIMIT 10</code></pre></div><div class="code-unit"><div class="code-head"><span>Amostra — codigos_operacao</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 3b: amostra de voebem.bronze.codigos_operacao
+SELECT * FROM voebem.bronze.codigos_operacao LIMIT 10</code></pre></div><div class="code-unit"><div class="code-head"><span>Amostra — empresas_estrangeiras</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 3c: amostra de voebem.bronze.empresas_estrangeiras
+SELECT * FROM voebem.bronze.empresas_estrangeiras LIMIT 10</code></pre></div><div class="code-unit"><div class="code-head"><span>Amostra — empresas_nacionais</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 3d: amostra de voebem.bronze.empresas_nacionais
+SELECT * FROM voebem.bronze.empresas_nacionais LIMIT 10</code></pre></div><div class="code-unit"><div class="code-head"><span>Amostra — vra</span><span class="lang">SQL</span></div>
+            <pre><code>%sql
+-- Validação 3e: amostra de voebem.bronze.vra
+SELECT * FROM voebem.bronze.vra LIMIT 10</code></pre></div>
+    </div></section>
+
+    <section id="contagem"><h2 class="section-title"><span class="num">5</span>Contagem de registros</h2>
+      <div class="metrics"><div class="metric"><div class="metric-value">496</div><div class="metric-label">aerodromos</div></div><div class="metric"><div class="metric-value">13</div><div class="metric-label">codigos_operacao</div></div><div class="metric"><div class="metric-value">148</div><div class="metric-label">empresas_estrangeiras</div></div><div class="metric"><div class="metric-value">729</div><div class="metric-label">empresas_nacionais</div></div><div class="metric"><div class="metric-value">1.014.705</div><div class="metric-label">vra</div></div></div>
+      <div class="card"><div class="table-wrap"><table class=""><thead><tr><th>Tabela</th><th>Registros</th><th>Colunas</th></tr></thead><tbody><tr><td>aerodromos</td><td>496</td><td>12</td></tr><tr><td>codigos_operacao</td><td>13</td><td>3</td></tr><tr><td>empresas_estrangeiras</td><td>148</td><td>9</td></tr><tr><td>empresas_nacionais</td><td>729</td><td>9</td></tr><tr><td>vra</td><td>1.014.705</td><td>14</td></tr><tr><td>TOTAL</td><td>1.016.091</td><td>47</td></tr></tbody></table></div>
+        <div class="highlight"><strong>Total:</strong> 1.016.091 registros. Todas as cinco tabelas possuem dados.</div>
+      </div>
+    </section>
+
+    <section id="esquema"><h2 class="section-title"><span class="num">6</span>Esquema das tabelas</h2>
+      <p>Foram retornados 47 campos. Abra cada tabela para consultar coluna, tipo, nulabilidade e comentário.</p><details class="card schema-card">
+          <summary><span><code>aerodromos</code></span><span class="pill">12 colunas</span></summary>
+          <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Tipo</th><th>Permite nulo</th><th>Comentário</th></tr></thead><tbody><tr><td>icao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>ciad</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>nome</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>municipio</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>uf</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>municipio_servido</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>uf_servido</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>latitude</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>longitude</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>altitude</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>situacao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_ingerido_em</td><td>TIMESTAMP</td><td>YES</td><td><span class="null">NULL</span></td></tr></tbody></table></div>
+        </details><details class="card schema-card">
+          <summary><span><code>codigos_operacao</code></span><span class="pill">3 colunas</span></summary>
+          <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Tipo</th><th>Permite nulo</th><th>Comentário</th></tr></thead><tbody><tr><td>dominio</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>codigo</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>descricao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr></tbody></table></div>
+        </details><details class="card schema-card">
+          <summary><span><code>empresas_estrangeiras</code></span><span class="pill">9 colunas</span></summary>
+          <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Tipo</th><th>Permite nulo</th><th>Comentário</th></tr></thead><tbody><tr><td>icao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>sigla_iata</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>razao_social</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>servico</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>cidade</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>uf</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>situacao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_arquivo_origem</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_ingerido_em</td><td>TIMESTAMP</td><td>YES</td><td><span class="null">NULL</span></td></tr></tbody></table></div>
+        </details><details class="card schema-card">
+          <summary><span><code>empresas_nacionais</code></span><span class="pill">9 colunas</span></summary>
+          <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Tipo</th><th>Permite nulo</th><th>Comentário</th></tr></thead><tbody><tr><td>icao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>sigla_iata</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>razao_social</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>servico</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>cidade</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>uf</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>situacao</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_arquivo_origem</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_ingerido_em</td><td>TIMESTAMP</td><td>YES</td><td><span class="null">NULL</span></td></tr></tbody></table></div>
+        </details><details class="card schema-card">
+          <summary><span><code>vra</code></span><span class="pill">14 colunas</span></summary>
+          <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Tipo</th><th>Permite nulo</th><th>Comentário</th></tr></thead><tbody><tr><td>icao_empresa</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>numero_voo</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>codigo_di</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>codigo_tipo_linha</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>icao_origem</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>icao_destino</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>partida_prevista</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>partida_real</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>chegada_prevista</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>chegada_real</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>situacao_voo</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>codigo_justificativa</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_arquivo_origem</td><td>STRING</td><td>YES</td><td><span class="null">NULL</span></td></tr><tr><td>_ingerido_em</td><td>TIMESTAMP</td><td>YES</td><td><span class="null">NULL</span></td></tr></tbody></table></div>
+        </details>
+    </section>
+
+    <section id="amostras"><h2 class="section-title"><span class="num">7</span>Amostras de dados</h2>
+      <p>Cada bloco contém a consulta e os 10 registros retornados, com todas as colunas disponíveis.</p><details class="card sample-card">
+          <summary><span><code>aerodromos</code></span><span class="pill">10 registros · 12 colunas</span></summary>
+          <div class="query-label">Consulta executada</div>
+          <pre><code>%sql
+-- Validação 3a: amostra de voebem.bronze.aerodromos
+SELECT * FROM voebem.bronze.aerodromos LIMIT 10</code></pre>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>icao</th><th>ciad</th><th>nome</th><th>municipio</th><th>uf</th><th>municipio_servido</th><th>uf_servido</th><th>latitude</th><th>longitude</th><th>altitude</th><th>situacao</th><th>_ingerido_em</th></tr></thead><tbody><tr><td>SBRB</td><td>AC0001</td><td>Plácido de Castro</td><td>RIO BRANCO</td><td>Acre</td><td>Rio Branco</td><td>Acre</td><td>09°52&#x27;06&quot;S</td><td>067°53&#x27;53&quot;W</td><td>193,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SWPI</td><td>AM0006</td><td>Parintins</td><td>PARINTINS</td><td>Amazonas</td><td>Parintins</td><td>Amazonas</td><td>02°40&#x27;25&quot;S</td><td>056°46&#x27;39&quot;W</td><td>25,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SBMQ</td><td>AP0001</td><td>Alberto Alcolumbre</td><td>MACAPÁ</td><td>Amapá</td><td>Macapá</td><td>Amapá</td><td>00°03&#x27;02&quot;N</td><td>051°04&#x27;20&quot;W</td><td>17,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SBVC</td><td>BA0005</td><td>Glauber de Andrade Rocha</td><td>VITÓRIA DA CONQUISTA</td><td>Bahia</td><td>Vitória da Conquista</td><td>Bahia</td><td>14°54&#x27;28&quot;S</td><td>040°54&#x27;53&quot;W</td><td>894,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SBLE</td><td>BA0006</td><td>HORÁCIO DE MATTOS</td><td>LENÇÓIS</td><td>Bahia</td><td>Lençóis</td><td>Bahia</td><td>12°28&#x27;56&quot;S</td><td>041°16&#x27;37&quot;W</td><td>506,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SNVB</td><td>BA0008</td><td>Valença</td><td>VALENÇA</td><td>Bahia</td><td>Valença</td><td>Bahia</td><td>13°17&#x27;47&quot;S</td><td>038°59&#x27;33&quot;W</td><td>5,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SNGI</td><td>BA0009</td><td>Aeródromo de Guanambi</td><td>GUANAMBI</td><td>Bahia</td><td>Guanambi</td><td>Bahia</td><td>14°12&#x27;29&quot;S</td><td>042°44&#x27;46&quot;W</td><td>553,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SNTF</td><td>BA0016</td><td>Teixeira de Freitas</td><td>TEIXEIRA DE FREITAS</td><td>Bahia</td><td>Teixeira de Freitas</td><td>Bahia</td><td>17°31&#x27;28&quot;S</td><td>039°40&#x27;06&quot;W</td><td>105,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SNIC</td><td>BA0019</td><td>Irecê</td><td>IRECÊ</td><td>Bahia</td><td>Irecê</td><td>Bahia</td><td>11°20&#x27;24&quot;S</td><td>041°50&#x27;49&quot;W</td><td>784,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr><tr><td>SBFZ</td><td>CE0001</td><td>Pinto Martins</td><td>FORTALEZA</td><td>Ceará</td><td>Fortaleza</td><td>Ceará</td><td>03°46&#x27;33&quot;S</td><td>038°31&#x27;56&quot;W</td><td>25,0</td><td>Cadastrado</td><td>2026-09-17T22:15:18.712Z</td></tr></tbody></table></div>
+        </details><details class="card sample-card">
+          <summary><span><code>codigos_operacao</code></span><span class="pill">10 registros · 3 colunas</span></summary>
+          <div class="query-label">Consulta executada</div>
+          <pre><code>%sql
+-- Validação 3b: amostra de voebem.bronze.codigos_operacao
+SELECT * FROM voebem.bronze.codigos_operacao LIMIT 10</code></pre>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>dominio</th><th>codigo</th><th>descricao</th></tr></thead><tbody><tr><td>codigo_di</td><td>0</td><td>Etapa Regular</td></tr><tr><td>codigo_di</td><td>2</td><td>Etapa Extra</td></tr><tr><td>codigo_di</td><td>3</td><td>Etapa de Retorno</td></tr><tr><td>codigo_di</td><td>4</td><td>Inclusão de Etapa</td></tr><tr><td>codigo_di</td><td>6</td><td>Etapa Não Remunerada Sem Transporte de Objetos</td></tr><tr><td>codigo_di</td><td>7</td><td>Etapa de Voo de Fretamento</td></tr><tr><td>codigo_di</td><td>9</td><td>Etapa de Voo Charter</td></tr><tr><td>codigo_di</td><td>D</td><td>Etapa de Voo Duplicada</td></tr><tr><td>codigo_di</td><td>E</td><td>Etapa Não Remunerada Com Transporte de Objetos</td></tr><tr><td>codigo_tipo_linha</td><td>N</td><td>Doméstica Mista</td></tr></tbody></table></div>
+        </details><details class="card sample-card">
+          <summary><span><code>empresas_estrangeiras</code></span><span class="pill">10 registros · 9 colunas</span></summary>
+          <div class="query-label">Consulta executada</div>
+          <pre><code>%sql
+-- Validação 3c: amostra de voebem.bronze.empresas_estrangeiras
+SELECT * FROM voebem.bronze.empresas_estrangeiras LIMIT 10</code></pre>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th><th>_arquivo_origem</th><th>_ingerido_em</th></tr></thead><tbody><tr><td>PLM</td><td>EB</td><td>WAMOS AIR S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO JOSÉ DOS PINHAIS</td><td>PR</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>IGA</td><td>TE</td><td>SKY TAXI SP. Z O.O.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>RIO DE JANEIRO</td><td>RJ</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>ARN</td><td>AN</td><td>AERONEXUS CORPORATE</td><td>ESTRANGEIRA NÃO REGULAR</td><td>INDAIATUBA</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>WFL</td><td>2W</td><td>WORLD 2 FLY, S.L. - W2FLY</td><td>ESTRANGEIRA NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>AJB</td><td>Z0</td><td>AMERICAN JET S.A.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>FLORIANÓPOLIS</td><td>SC</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>AMX</td><td>AM</td><td>AEROVÍAS DE MÉXICO S.A DE C.V - AEROMÉXICO</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>DWI</td><td>DM</td><td>ARAJET S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>ANZ</td><td>NZ</td><td>AIR NEW ZEALAND LIMITED</td><td>ESTRANGEIRA OFFLINE</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>GTR</td><td>GT</td><td>GALISTAIR TRANDING LTD.</td><td>ESTRANGEIRA NÃO REGULAR</td><td>CAMPINAS</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr><tr><td>CUB</td><td>CU</td><td>CUBANA DE AVIACION S.A.</td><td>ESTRANGEIRA REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_estrangeiros.csv</td><td>2026-09-17T22:15:35.319Z</td></tr></tbody></table></div>
+        </details><details class="card sample-card">
+          <summary><span><code>empresas_nacionais</code></span><span class="pill">10 registros · 9 colunas</span></summary>
+          <div class="query-label">Consulta executada</div>
+          <pre><code>%sql
+-- Validação 3d: amostra de voebem.bronze.empresas_nacionais
+SELECT * FROM voebem.bronze.empresas_nacionais LIMIT 10</code></pre>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>icao</th><th>sigla_iata</th><th>razao_social</th><th>servico</th><th>cidade</th><th>uf</th><th>situacao</th><th>_arquivo_origem</th><th>_ingerido_em</th></tr></thead><tbody><tr><td><span class="null">NULL</span></td><td>..</td><td>AGRICENTER AVIAÇÃO AGRÍCOLA LTDA.</td><td>AEROAGRÍCOLA</td><td>PONTA PORÃ</td><td>MS</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>AERO AGRÍCOLA TELES PIRES LTDA</td><td>AEROAGRÍCOLA, COMBATE A INCÊNDIOS</td><td>SORRISO</td><td>MT</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>AMM SERVIÇOS AÉREOS LTDA</td><td>VOOS PANORÂMICOS</td><td>ITAPEMA</td><td>SC</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>NAGANO E BORGES AVIAÇÃO AGRÍCOLA LTDA (AEROJET AVIAÇÃO AGRÍCOLA)</td><td>AEROAGRÍCOLA</td><td>ABAETETUBA</td><td>PA</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td><span class="null">NULL</span></td><td>AEROCLUBE DE SÃO JOSÉ DO RIO PRETO</td><td>VOOS PANORÂMICOS</td><td>SÃO JOSÉ DO RIO PRETO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>MÁXIMA AVIAÇÃO AGRÍCOLA EIRELI</td><td>AEROAGRÍCOLA</td><td>NOVA XAVANTINA</td><td>MT</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>HIGH CLASS TÁXI AÉREO LTDA</td><td>TÁXI-AÉREO, TRANSPORTE AÉREO NÃO REGULAR</td><td>SÃO PAULO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>JET BLACK PARTICIPAÇÕES LTDA</td><td>TÁXI-AÉREO, TRANSPORTE AÉREO NÃO REGULAR</td><td>CAMPINAS</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>AERO FARM SERVIÇOS DE PULVERIZAÇÃO E AVIAÇÃO AGRÍCOLA LTDA</td><td>AEROAGRÍCOLA</td><td>SORRISO</td><td>MT</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr><tr><td><span class="null">NULL</span></td><td>..</td><td>AMAZON GREEN TÁXI AÉREO E SERVIÇOS AERONÁUTICOS LTDA</td><td>TÁXI-AÉREO</td><td>SÃO JOSÉ DO RIO PRETO</td><td>SP</td><td>ATIVA</td><td>pda_empresas_aereas_nacionais.csv</td><td>2026-09-17T22:15:30.910Z</td></tr></tbody></table></div>
+        </details><details class="card sample-card">
+          <summary><span><code>vra</code></span><span class="pill">10 registros · 14 colunas</span></summary>
+          <div class="query-label">Consulta executada</div>
+          <pre><code>%sql
+-- Validação 3e: amostra de voebem.bronze.vra
+SELECT * FROM voebem.bronze.vra LIMIT 10</code></pre>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>icao_empresa</th><th>numero_voo</th><th>codigo_di</th><th>codigo_tipo_linha</th><th>icao_origem</th><th>icao_destino</th><th>partida_prevista</th><th>partida_real</th><th>chegada_prevista</th><th>chegada_real</th><th>situacao_voo</th><th>codigo_justificativa</th><th>_arquivo_origem</th><th>_ingerido_em</th></tr></thead><tbody><tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-25 06:00:00</td><td>2026-06-25 05:53:00</td><td>2026-06-25 07:05:00</td><td>2026-06-25 06:48:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-27 06:00:00</td><td>2026-06-27 06:02:00</td><td>2026-06-27 07:05:00</td><td>2026-06-27 07:00:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2105</td><td>0</td><td>N</td><td>SBPA</td><td>SBFL</td><td>2026-06-30 06:00:00</td><td>2026-06-30 05:53:00</td><td>2026-06-30 07:05:00</td><td>2026-06-30 06:55:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-02 14:20:00</td><td>2026-06-02 14:25:00</td><td>2026-06-02 16:20:00</td><td>2026-06-02 16:13:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-07 14:00:00</td><td>2026-06-07 14:02:00</td><td>2026-06-07 16:00:00</td><td>2026-06-07 15:59:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-09 14:20:00</td><td>2026-06-09 14:24:00</td><td>2026-06-09 16:20:00</td><td>2026-06-09 16:31:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-14 14:00:00</td><td>2026-06-14 13:53:00</td><td>2026-06-14 16:00:00</td><td>2026-06-14 15:48:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-16 14:20:00</td><td>2026-06-16 14:17:00</td><td>2026-06-16 16:20:00</td><td>2026-06-16 16:20:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-21 14:00:00</td><td>2026-06-21 14:04:00</td><td>2026-06-21 16:00:00</td><td>2026-06-21 15:59:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr><tr><td>GLO</td><td>2106</td><td>0</td><td>N</td><td>SBSP</td><td>SBDB</td><td>2026-06-23 14:20:00</td><td>2026-06-23 14:59:00</td><td>2026-06-23 16:20:00</td><td>2026-06-23 17:17:00</td><td>REALIZADO</td><td>N/A</td><td>VRA_20266.csv</td><td>2026-09-17T21:45:03.277Z</td></tr></tbody></table></div>
+        </details>
+    </section>
+
+    <section id="performance"><h2 class="section-title"><span class="num">8</span>Performance e métricas</h2>
+      <div class="card"><h3>Volume por tabela</h3><div class="table-wrap"><table class=""><thead><tr><th>Tabela</th><th>Registros</th><th>Colunas</th><th>% do total</th></tr></thead><tbody><tr><td>aerodromos</td><td>496</td><td>12</td><td>0,049%</td></tr><tr><td>codigos_operacao</td><td>13</td><td>3</td><td>0,001%</td></tr><tr><td>empresas_estrangeiras</td><td>148</td><td>9</td><td>0,015%</td></tr><tr><td>empresas_nacionais</td><td>729</td><td>9</td><td>0,072%</td></tr><tr><td>vra</td><td>1.014.705</td><td>14</td><td>99,864%</td></tr><tr><td>TOTAL</td><td>1.016.091</td><td>47</td><td>100,000%</td></tr></tbody></table></div>
+        <div class="highlight"><strong>Concentração de volume:</strong> <code>vra</code> representa 99.86% dos registros analisados.</div>
+      </div>
+      <div class="card"><h3>Tempos registrados no notebook</h3>
+        <p>Tempos calculados a partir dos metadados <code>startTime</code> e <code>finishTime</code> das células executadas. Incluem o processamento registrado pelo notebook e não constituem benchmark controlado.</p>
+        <div class="table-wrap"><table class=""><thead><tr><th>Célula</th><th>Duração registrada</th></tr></thead><tbody><tr><td>Contagem de linhas por tabela</td><td>38,601 s</td></tr><tr><td>Esquema das tabelas Bronze</td><td>2,250 s</td></tr><tr><td>Amostra — aerodromos</td><td>10,210 s</td></tr><tr><td>Amostra — codigos_operacao</td><td>2,304 s</td></tr><tr><td>Amostra — empresas_estrangeiras</td><td>2,115 s</td></tr><tr><td>Amostra — empresas_nacionais</td><td>2,329 s</td></tr><tr><td>Amostra — vra</td><td>2,341 s</td></tr></tbody></table></div>
+        <div class="highlight"><strong>Soma das durações registradas:</strong> 60.150 s. <strong>Maior volume:</strong> 1.014.705 registros em <code>vra</code>.</div>
+      </div>
+    </section>
+
+    <section id="conclusao"><h2 class="section-title"><span class="num">9</span>Conclusão</h2><div class="card">
+      <div class="highlight success"><strong>Validação concluída:</strong> as cinco tabelas retornaram registros, o esquema totalizou 47 campos e as cinco consultas de amostra retornaram 10 linhas cada.</div>
+      <ul class="checklist"><li>1.016.091 registros contabilizados.</li><li>5 tabelas analisadas.</li><li>47 colunas documentadas no total.</li><li>50 registros inspecionados nas amostras.</li><li>Nenhuma operação de escrita presente no notebook.</li></ul>
+    </div></section>
+  </main>
+  <footer>Relatório autocontido gerado a partir do notebook <strong>bronze_validation</strong> · 18/09/2026 20:59 UTC</footer>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var button = document.getElementById('themeToggle');
+      function updateButton() {
+        var light = root.dataset.theme === 'light';
+        button.textContent = light ? '☾ Modo escuro' : '☀ Modo claro';
+        button.setAttribute('aria-label', light ? 'Alternar para o modo escuro' : 'Alternar para o modo claro');
+        button.setAttribute('aria-pressed', String(light));
+      }
+      button.addEventListener('click', function () {
+        var next = root.dataset.theme === 'light' ? 'dark' : 'light';
+        root.dataset.theme = next;
+        try { localStorage.setItem('relatorio-notebook-theme', next); } catch (e) { /* Alternância continua válida nesta sessão. */ }
+        updateButton();
+      });
+      updateButton();
+    })();
+  </script>
+</body>
+</html>
