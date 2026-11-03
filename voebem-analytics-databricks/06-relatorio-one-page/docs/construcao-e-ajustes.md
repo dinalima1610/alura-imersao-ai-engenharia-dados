@@ -15,8 +15,8 @@ Esta exploração complementar nasceu da intenção de melhorar a apresentação
 | [Entradas da execução 03](../entradas/execucao-03/) | PDF de conteúdo, Response com SQL/resultados, CSVs e PNGs |
 | [Prompts da análise](../entradas/execucao-03/prompts-analise.txt) | Instruções que originaram os resultados da execução 03 |
 | [Prompt do One Page](../prompts/prompt-one-page.txt) | Solicitação de transformação e apresentação |
-| [Exemplo visual](../referencia-visual/exemplo-one-page.html) | Referência de aparência; seus números e textos pertencem ao exemplo |
-| [Relatório final](../relatorio/index.html) | Demonstração de apresentação baseada na execução 03 |
+| [Exemplo visual](https://dinalima1610.github.io/alura-imersao-ai-engenharia-dados/voebem-analytics-databricks/06-relatorio-one-page/referencia-visual/exemplo-one-page.html) | Referência de aparência; seus números e textos pertencem ao exemplo |
+| [Relatório final](https://dinalima1610.github.io/alura-imersao-ai-engenharia-dados/voebem-analytics-databricks/06-relatorio-one-page/relatorio/index.html) | Demonstração de apresentação baseada na execução 03 |
 
 ![Comparação entre a saída do Genie e o One Page](img/genie-vs-onepage.png)
 
@@ -72,4 +72,4 @@ O [gerador](../) lê os arquivos de origem e deriva **todas** as quantidades (se
 
 ## 📊 Resultado
 
-Mesmo conteúdo do PDF, com gráficos fiéis, rastreabilidade completa e as observações de consistência registradas em um bloco recolhível. Ver o [relatório de apresentação](../relatorio/index.html).
+Mesmo conteúdo do PDF, com gráficos fiéis, rastreabilidade completa e as observações de consistência registradas em um bloco recolhível. Ver o [relatório de apresentação](https://dinalima1610.github.io/alura-imersao-ai-engenharia-dados/voebem-analytics-databricks/06-relatorio-one-page/relatorio/index.html).

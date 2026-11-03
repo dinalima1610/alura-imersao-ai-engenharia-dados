@@ -2,7 +2,8 @@
 
 Por iniciativa própria, quis melhorar a forma de apresentar os resultados entregues pelo Genie em um HTML One Page. Esta atividade foi além do escopo da imersão.
 
-- [Abrir o relatório final](relatorio/index.html): baixe o HTML e abra no navegador.
+- [Abrir o relatório final](https://dinalima1610.github.io/alura-imersao-ai-engenharia-dados/voebem-analytics-databricks/06-relatorio-one-page/relatorio/index.html): baixe o HTML e abra no navegador.
+E:\workspace\alura-imersao-ai-engenharia-dados\voebem-analytics-databricks\06-relatorio-one-page\relatorio\index.html
 - [Entender a construção e os ajustes](docs/construcao-e-ajustes.md).
 - [Consultar o prompt de apresentação](prompts/prompt-one-page.txt).
 
